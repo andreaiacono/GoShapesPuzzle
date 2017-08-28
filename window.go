@@ -8,37 +8,19 @@ import (
 
 var grey = Color{0.2, 0.2, 0.2}
 
-var da *gtk.DrawingArea
+var drawingArea *gtk.DrawingArea
 
-func loadFile() ([][]int8, error) {
+func loadFile() {
 
-	//chooser, err := gtk.FileChooserButtonNew("Choose a file", gtk.FILE_CHOOSER_ACTION_OPEN)
-	//if err != nil {
-		return [][]int8{}, nil
-	//}
-	//
-	//// Show the ColorChooserDialog
-	//chooser.ShowNow()
-	//
-	//grid, err := ReadFile("")
-	//if err != nil {
-	//	return grid, err
-	//}
-	//return grid, nil
-	//// Get the results from the ColorChooserDialog
-	//if chooser.Run() == int(gtk.RESPONSE_OK) {
-	//	// Grab the results
-	//	color := chooser.GetRGBA()
-	//	log.Println("Added color:", color)
-	//	// Destroy the dialog and exit the program
-	//	chooser.Destroy()
-	//	gtk.MainQuit()
-	//	// gtk actually throws an error using MainQuit()
-	//	// so I'll exit the program fully with golang
-	//	// may have unintended side effects though
-	//	os.Exit(0)
-	//}
+	chooser, err := gtk.FileChooserButtonNew("Choose a file", gtk.FILE_CHOOSER_ACTION_OPEN)
+	if err != nil {
+		log.Printf("Error opening file open dialog: %s", err)
+	}
 
+	// Show the ColorChooserDialog
+	chooser.ShowNow()
+
+	log.Printf("file: %s", chooser.GetFilename())
 }
 
 func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
@@ -110,11 +92,10 @@ func CreateAndStartGui(puzzle Puzzle) {
 	gtkGrid.SetBorderWidth(5)
 
 	// Create some widgets to put in the gtkGrid.
-	drawingArea, err := gtk.DrawingAreaNew()
+	da, err := gtk.DrawingAreaNew()
 	if err != nil {
 		log.Fatal("Unable to create drawingarea:", err)
 	}
-	da = drawingArea
 
 	statusBar, err := gtk.GridNew()
 	if err != nil {
@@ -133,7 +114,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 		log.Fatal("Unable to create label:", err)
 	}
 
-	gtkGrid.Add(drawingArea)
+	gtkGrid.Add(da)
 	statusBar.Add(btn)
 	statusBar.Add(infoLabel)
 	gtkGrid.Add(statusBar)
@@ -146,17 +127,16 @@ func CreateAndStartGui(puzzle Puzzle) {
 		}
 		isSolving = !isSolving
 		//update()
-		//loadFile()
+		loadFile()
 	})
 
-	gtkGrid.Attach(drawingArea, 1, 1, 1, 2)
-	drawingArea.SetHExpand(true)
-	drawingArea.SetVExpand(true)
-	//gr = grids[0]
+	gtkGrid.Attach(da, 1, 1, 1, 2)
+	da.SetHExpand(true)
+	da.SetVExpand(true)
 
-	drawingArea.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
-		width := float64(drawingArea.GetAllocatedWidth())
-		height := float64(drawingArea.GetAllocatedHeight())
+	da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
+		width := float64(da.GetAllocatedWidth())
+		height := float64(da.GetAllocatedHeight())
 
 		if width > height {
 			size = height - 10
@@ -178,20 +158,31 @@ func CreateAndStartGui(puzzle Puzzle) {
 	})
 
 	menuBar, err := gtk.MenuBarNew()
+	if err != nil {
+		log.Fatal("Unable to create menubar:", err)
+	}
 
-	menu, _ := gtk.MenuNew()
+	menu, err := gtk.MenuNew()
+	if err != nil {
+		log.Fatal("Unable to create menu:", err)
+	}
 	menu.SetName("File")
 
 	menuItem, err := gtk.MenuItemNew()
-	menuItem.Set("Open", func() {
+	if err != nil {
+		log.Fatal("Unable to create menuitem:", err)
+	}
 
+	menuItem.Set("Open", func() {
+		log.Printf("Open called.%s", menuBar)
 	})
 	menu.Add(menuItem)
 	//
 	//win.Add(menu)
+	menuBar.ShowNow()
 
 	// Add the gtkGrid to the window, and show all widgets.
-	gtkGrid.Add(menuBar)
+	//win.Add(menuBar)
 
 	win.Add(gtkGrid)
 	win.ShowAll()
@@ -207,7 +198,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	//		}
 	//		nSets++
 	//		//gr = grids[nSets%4]
-	//		da.QueueDraw()
+	//		drawingArea.QueueDraw()
 	//		println(s)
 	//	}
 	//}()
