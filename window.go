@@ -4,23 +4,61 @@ import (
 	"log"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/gotk3/gotk3/cairo"
+	"errors"
 )
 
 var grey = Color{0.2, 0.2, 0.2}
 
 var drawingArea *gtk.DrawingArea
 
-func loadFile() {
+func openFile() (Puzzle, error) {
 
-	chooser, err := gtk.FileChooserButtonNew("Choose a file", gtk.FILE_CHOOSER_ACTION_OPEN)
-	if err != nil {
-		log.Printf("Error opening file open dialog: %s", err)
+	filename := getFilenameFromUser()
+	log.Printf("User choose file [%s]", filename)
+
+	var puzzle Puzzle
+	if filename != "" {
+
+		puzzle, err := ReadFile(filename)
+		if err != nil {
+			log.Print(err)
+			return puzzle, nil
+		}
+
+		return puzzle, nil
 	}
 
-	// Show the ColorChooserDialog
-	chooser.ShowNow()
+	return puzzle, errors.New("User canceled action")
+}
 
-	log.Printf("file: %s", chooser.GetFilename())
+func getFilenameFromUser() string {
+	filechooser, err := gtk.FileChooserDialogNewWith2Buttons(
+		"Open Shape Model",
+		nil,
+		gtk.FILE_CHOOSER_ACTION_OPEN,
+		"Cancel", gtk.RESPONSE_DELETE_EVENT,
+		"Open", gtk.RESPONSE_ACCEPT)
+
+	if err != nil {
+		return ""
+	}
+
+	// filter for models
+	filter, _ := gtk.FileFilterNew()
+	filter.AddPattern("*.model")
+	filter.SetName("Shape Models")
+	filechooser.AddFilter(filter)
+
+	switcher := filechooser.Run()
+	filename := filechooser.GetFilename()
+	filechooser.Destroy()
+
+	// if the user pressed another button other than OK
+	if switcher != -3 {
+		return ""
+	}
+
+	return filename
 }
 
 func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
@@ -61,7 +99,6 @@ func drawCell(i int, j int, cellSize float64, color Color, cr *cairo.Context) {
 func setColor(color Color, context *cairo.Context) {
 	context.SetSourceRGB(color.R, color.G, color.B)
 }
-
 
 func CreateAndStartGui(puzzle Puzzle) {
 
@@ -126,8 +163,10 @@ func CreateAndStartGui(puzzle Puzzle) {
 			btn.SetLabel("Find new solution")
 		}
 		isSolving = !isSolving
-		//update()
-		loadFile()
+		newPuzzle, err := openFile()
+		if err == nil {
+			puzzle = newPuzzle
+		}
 	})
 
 	gtkGrid.Attach(da, 1, 1, 1, 2)
