@@ -9,25 +9,18 @@ import (
 
 var grey = Color{0.2, 0.2, 0.2}
 
-var drawingArea *gtk.DrawingArea
-
 func openFile() (Puzzle, error) {
 
 	filename := getFilenameFromUser()
-	log.Printf("User choose file [%s]", filename)
 
 	var puzzle Puzzle
 	if filename != "" {
-
 		puzzle, err := ReadFile(filename)
 		if err != nil {
-			log.Print(err)
-			return puzzle, nil
+			return puzzle, err
 		}
-
 		return puzzle, nil
 	}
-
 	return puzzle, errors.New("User canceled action")
 }
 
@@ -63,13 +56,12 @@ func getFilenameFromUser() string {
 
 func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
 
-	//colors := GenerateColors(len(puzzle.Pieces))
 	colors := GenerateColors(len(puzzle.Pieces))
 
 	grid := puzzle.Grid
 	cellSize := size/float64(puzzle.MaxSize) - 1
 
-	// draws the tiles
+	// draws all the cells
 	var i, j int
 	for i = 0; i < len(grid); i++ {
 		for j = 0; j < len(grid[0]); j++ {
@@ -91,7 +83,7 @@ func drawCell(i int, j int, cellSize float64, color Color, cr *cairo.Context) {
 	cr.Rectangle(x, y, cellSize, cellSize)
 	cr.Fill()
 
-	// draws the border
+	// draws the border of the cell
 	setColor(grey, cr)
 	DrawRectangle(x, y, cellSize, cellSize, cr)
 }
@@ -136,7 +128,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 
 	statusBar, err := gtk.GridNew()
 	if err != nil {
-		log.Fatal("Unable to create gtkGrid:", err)
+		log.Fatal("Unable to create statusbar:", err)
 	}
 	statusBar.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	statusBar.SetBorderWidth(5)
@@ -151,11 +143,6 @@ func CreateAndStartGui(puzzle Puzzle) {
 		log.Fatal("Unable to create label:", err)
 	}
 
-	gtkGrid.Add(da)
-	statusBar.Add(btn)
-	statusBar.Add(infoLabel)
-	gtkGrid.Add(statusBar)
-
 	btn.Connect("clicked", func() {
 		if isSolving == false {
 			btn.SetLabel("Stop Finding")
@@ -163,13 +150,9 @@ func CreateAndStartGui(puzzle Puzzle) {
 			btn.SetLabel("Find new solution")
 		}
 		isSolving = !isSolving
-		newPuzzle, err := openFile()
-		if err == nil {
-			puzzle = newPuzzle
-		}
+
 	})
 
-	gtkGrid.Attach(da, 1, 1, 1, 2)
 	da.SetHExpand(true)
 	da.SetVExpand(true)
 
@@ -196,50 +179,51 @@ func CreateAndStartGui(puzzle Puzzle) {
 		drawGrid(puzzle, size, cr)
 	})
 
+	// creates menu
 	menuBar, err := gtk.MenuBarNew()
 	if err != nil {
 		log.Fatal("Unable to create menubar:", err)
 	}
 
-	menu, err := gtk.MenuNew()
+	fileMenu, err := gtk.MenuNew()
 	if err != nil {
 		log.Fatal("Unable to create menu:", err)
 	}
-	menu.SetName("File")
 
-	menuItem, err := gtk.MenuItemNew()
+	fileMenuItem, err := gtk.MenuItemNewWithLabel("File")
 	if err != nil {
 		log.Fatal("Unable to create menuitem:", err)
 	}
 
-	menuItem.Set("Open", func() {
-		log.Printf("Open called.%s", menuBar)
-	})
-	menu.Add(menuItem)
-	//
-	//win.Add(menu)
-	menuBar.ShowNow()
+	openMenuItem, err := gtk.MenuItemNewWithLabel("Open")
+	if err != nil {
+		log.Fatal("Unable to create menuitem:", err)
+	}
 
-	// Add the gtkGrid to the window, and show all widgets.
-	//win.Add(menuBar)
+	openMenuItem.Connect("activate", func() {
+		newPuzzle, err := openFile()
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		puzzle = newPuzzle
+	})
+
+	fileMenuItem.SetSubmenu(fileMenu)
+	fileMenu.Append(openMenuItem)
+	menuBar.Append(fileMenuItem)
+
+	gtkGrid.Attach(menuBar, 0, 0, 200, 200)
+
+	gtkGrid.Add(da)
+	statusBar.Add(btn)
+	statusBar.Add(infoLabel)
+	gtkGrid.Add(statusBar)
+
 
 	win.Add(gtkGrid)
 	win.ShowAll()
 
-	//var nSets = 1
-	//go func() {
-	//	for {
-	//		time.Sleep(1000 * time.Millisecond)
-	//		s := fmt.Sprintf("Set a label %d time(s)!", nSets)
-	//		//_, err := glib.IdleAdd(drawingArea, topLabel, s)
-	//		if err != nil {
-	//			log.Fatal("IdleAdd() failed:", err)
-	//		}
-	//		nSets++
-	//		//gr = grids[nSets%4]
-	//		drawingArea.QueueDraw()
-	//		println(s)
-	//	}
-	//}()
 	gtk.Main()
 }
