@@ -12,7 +12,7 @@ type Color struct {
 	B float64
 }
 
-
+const EMPTY = 0
 
 func DrawRectangle(x float64, y float64, width float64, height float64, cr *cairo.Context) {
 	cr.MoveTo(x, y)

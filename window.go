@@ -25,7 +25,7 @@ func openFile() (Puzzle, error) {
 }
 
 func getFilenameFromUser() string {
-	filechooser, err := gtk.FileChooserDialogNewWith2Buttons(
+	fileChooser, err := gtk.FileChooserDialogNewWith2Buttons(
 		"Open Shape Model",
 		nil,
 		gtk.FILE_CHOOSER_ACTION_OPEN,
@@ -40,11 +40,11 @@ func getFilenameFromUser() string {
 	filter, _ := gtk.FileFilterNew()
 	filter.AddPattern("*.model")
 	filter.SetName("Shape Models")
-	filechooser.AddFilter(filter)
+	fileChooser.AddFilter(filter)
 
-	switcher := filechooser.Run()
-	filename := filechooser.GetFilename()
-	filechooser.Destroy()
+	switcher := fileChooser.Run()
+	filename := fileChooser.GetFilename()
+	fileChooser.Destroy()
 
 	// if the user pressed another button other than OK
 	if switcher != -3 {
@@ -150,11 +150,12 @@ func CreateAndStartGui(puzzle Puzzle) {
 			btn.SetLabel("Find new solution")
 		}
 		isSolving = !isSolving
-
+		go solvePuzzle(createEmptyGrid(puzzle.Grid), puzzle.Pieces, &puzzle, win)
 	})
 
 	da.SetHExpand(true)
 	da.SetVExpand(true)
+
 
 	da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
 		width := float64(da.GetAllocatedWidth())
