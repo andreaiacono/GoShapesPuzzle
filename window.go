@@ -146,11 +146,11 @@ func CreateAndStartGui(puzzle Puzzle) {
 	btn.Connect("clicked", func() {
 		if isSolving == false {
 			btn.SetLabel("Stop Finding")
+			go solve(&puzzle, win)
 		} else {
 			btn.SetLabel("Find new solution")
 		}
 		isSolving = !isSolving
-		go solvePuzzle(createEmptyGrid(puzzle.Grid), puzzle.Pieces, &puzzle, win)
 	})
 
 	da.SetHExpand(true)

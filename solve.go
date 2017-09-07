@@ -3,24 +3,25 @@ package main
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
+	"log"
 )
 
 var found = false
 
 // returns next solution
-//func solve(puzzle Puzzle) {
-//
-//	remainingPieces := puzzle.Pieces
-//	//grid := createEmptyGrid(puzzle.Grid)
-//
-	//solvePuzzle(puzzle.Grid, remainingPieces)
-//}
+func solve(puzzle *Puzzle, win *gtk.Window) {
+
+	grid := createEmptyGrid(puzzle.Grid)
+	puzzle.Grid = grid
+
+	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win)
+}
 
 func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) {
 
 	puzzle.Grid = grid
 	win.QueueDraw()
-	time.Sleep(100*time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 	if len(remainingPieces) == 0 {
 		found = true
 		return
@@ -28,7 +29,7 @@ func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gt
 
 	for _, piece := range remainingPieces {
 
-		result, updatedGrid := checkPiece(piece, grid)
+		result, updatedGrid := placePiece(piece, grid)
 		if result {
 			remainingPieces = remainingPieces[1:]
 			solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
@@ -42,12 +43,14 @@ func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gt
 
 }
 
-func checkPiece(piece Piece, grid [][]int8) (bool, [][]int8) {
+// placePiece checks if is there room for this piece (or one of its rotations)
+// and if true add the piece to the grid, otherwise return false
+func placePiece(piece Piece, grid [][]int8) (bool, [][]int8) {
 
-	for i := 0; i < len(grid); i++ {
-		for j := 0; j < len(grid[0]); j++ {
+	for i := 0; i < len(grid)-piece.MaxX; i++ {
+		for j := 0; j < len(grid[0])-piece.MaxY; j++ {
 			if pieceFits(piece, i, j, grid) {
-				return true, placePiece(piece, i, j, grid)
+				return true, addPieceToGrid(piece, i, j, grid)
 			}
 		}
 	}
@@ -55,13 +58,29 @@ func checkPiece(piece Piece, grid [][]int8) (bool, [][]int8) {
 	return false, grid
 }
 
-func placePiece(piece Piece, dx, dy int, grid [][]int8) [][]int8 {
+func pieceFits(piece Piece, dx, dy int, grid [][]int8) bool {
+
+	//log.Printf("grid: %v dx %d, dy %d", grid, dx, dy)
+	for i := 0; i < len(piece.Shape); i++ {
+		for j := 0; j < len(piece.Shape[0]); j++ {
+			if piece.Shape[i][j] != EMPTY && grid[i+dx][j+dy] != EMPTY {
+				return false
+			}
+		}
+	}
+	log.Printf("adding %v at %d, %d - %v", piece.Shape, dx, dy, grid)
+
+	return true
+}
+
+// addPieceToGrid writes
+func addPieceToGrid(piece Piece, dx, dy int, grid [][]int8) [][]int8 {
 
 	updatedGrid := copyGrid(grid)
 	for i := 0; i < len(piece.Shape); i++ {
 		for j := 0; j < len(piece.Shape[0]); j++ {
 			if piece.Shape[i][j] != EMPTY {
-				updatedGrid[i][j] = piece.Number
+				updatedGrid[dx+i][dy+j] = piece.Number
 			}
 		}
 	}
@@ -90,18 +109,4 @@ func copyGrid(grid [][]int8) [][]int8 {
 		}
 	}
 	return copiedGrid
-}
-
-func pieceFits(piece Piece, dx, dy int, grid [][]int8) bool {
-
-	//log.Printf("grid: %v dx %d, dy %d", grid, dx, dy)
-	for i := 0; i < len(piece.Shape); i++ {
-		for j := 0; j < len(piece.Shape[0]); j++ {
-			if dx+i < len(grid) && dy+j < len(grid[0]) && piece.Shape[i][j] != EMPTY && grid[i+dx][j+dy] != EMPTY {
-				return false
-			}
-		}
-	}
-
-	return true
 }
