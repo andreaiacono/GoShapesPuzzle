@@ -159,7 +159,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	btn.Connect("clicked", func() {
 		if isSolving == false {
 			btn.SetLabel("Stop Finding")
-			go solve(&puzzle, win)
+			go solver(&puzzle, win)
 		} else {
 			btn.SetLabel("Find new solution")
 		}

@@ -1,7 +1,5 @@
 package main
 
-//import "log"
-
 type Shape [][]int8
 
 type Piece struct {
@@ -24,11 +22,11 @@ func (piece Piece) Flip() Piece {
 
 func flip(shape Shape) Shape {
 	var flipped Shape = copyShape(shape)
-	var cols = len(shape[0])-1
+	var cols = len(shape[0]) - 1
 	var i, j int
 	for i = 0; i < len(shape); i++ {
-		for j = 0; j < len(shape); j++ {
-			flipped[j][i] = shape[j][cols-i]
+		for j = 0; j < len(shape[0]); j++ {
+			flipped[i][j] = shape[i][cols-j]
 		}
 	}
 	return flipped
@@ -41,14 +39,20 @@ func (piece Piece) Rotate() Piece {
 }
 
 func rotate(shape Shape) Shape {
-	var rotated Shape = copyShape(shape)
-	var i, j int
-	for i = 0; i < len(shape); i++ {
-		for j = 0; j < len(shape); j++ {
-			rotated[j][i] = shape[j][i]
+
+	var n = len(shape)
+	var m = len(shape[0])
+	var rotatedShape Shape = make(Shape, m)
+	for ii := 0; ii < m; ii++ {
+		rotatedShape[ii] = make([]int8, n)
+	}
+
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			rotatedShape[m-j-1][i] = shape[i][j]
 		}
 	}
-	return rotated
+	return rotatedShape
 }
 
 func copyShape(shape Shape) Shape {
@@ -125,22 +129,24 @@ func getPiece(grid [][] int8, pieceNumber int8) Piece {
 
 func getRotations(piece Shape) []Shape {
 
-	// there are 3 90-degrees rotation of the piece plus the flipped
-	// piece and its 3 90-degrees rotation: 7 in total
-	var rotations [7]Shape
+	// there's the piece itself, the 3 90-degrees rotation of the piece plus the flipped
+	// piece and its 3 90-degrees rotation: 8 in total
+	var rotations [8]Shape
+	rotations[0] = copyShape(piece)
 
 	var i int
 	for i = 0; i < 3; i++ {
 		piece = rotate(piece)
-		rotations[i] = piece
+		rotations[i+1] = copyShape(piece)
 	}
 	piece = flip(piece)
-	rotations[3] = piece
+	rotations[4] = piece
 	for i = 0; i < 3; i++ {
 		piece = rotate(piece)
-		rotations[i+4] = piece
+		rotations[i+5] = copyShape(piece)
 	}
 
+	//FIXME remove symmetries!
 	return rotations[:]
 }
 
