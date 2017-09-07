@@ -21,7 +21,7 @@ func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gt
 
 	puzzle.Grid = grid
 	win.QueueDraw()
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	if len(remainingPieces) == 0 {
 		found = true
 		return

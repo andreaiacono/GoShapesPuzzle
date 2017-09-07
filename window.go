@@ -133,12 +133,25 @@ func CreateAndStartGui(puzzle Puzzle) {
 	statusBar.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	statusBar.SetBorderWidth(5)
 
+	adj, err := gtk.AdjustmentNew(100.0, 0.0, 1000.0, 50.0, 0.0,0.0)
+	if err != nil {
+		log.Fatal("Unable to create adjustement:", err)
+	}
+	scale, err := gtk.ScaleNew(gtk.ORIENTATION_HORIZONTAL, adj)
+	if err != nil {
+		log.Fatal("Unable to create scale:", err)
+	}
+	scale.SetHExpand(true)
+	scale.Connect("value-changed", func() {
+		puzzle.Speed = int(scale.GetValue())
+	})
+
 	btn, err := gtk.ButtonNewWithLabel("Find new solution")
 	if err != nil {
 		log.Fatal("Unable to create button:", err)
 	}
 
-	infoLabel, err := gtk.LabelNew("   Ready")
+	infoLabel, err := gtk.LabelNew("   Speed")
 	if err != nil {
 		log.Fatal("Unable to create label:", err)
 	}
@@ -220,6 +233,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	gtkGrid.Add(da)
 	statusBar.Add(btn)
 	statusBar.Add(infoLabel)
+	statusBar.Add(scale)
 	gtkGrid.Add(statusBar)
 
 

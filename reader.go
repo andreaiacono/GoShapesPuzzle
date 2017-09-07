@@ -43,7 +43,7 @@ func ReadFile(filename string) (Puzzle, error) {
 	}
 
 	pieces := GetPiecesFromGrid(grid)
-	return Puzzle { pieces, grid[:], max(int8(len(rows)), maxLen)}, nil
+	return Puzzle { pieces, grid[:], max(int8(len(rows)), maxLen), 100}, nil
 }
 
 func max(a int8, b int8) int8 {
