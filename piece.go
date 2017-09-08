@@ -5,13 +5,11 @@ type Shape [][]int8
 type Piece struct {
 	Shape     [][]int8
 	Number    int8
-	MaxX      int
-	MaxY      int
 	Rotations []Shape
 }
 
 func copyPiece(piece Piece) Piece {
-	return Piece{piece.Shape, piece.Number, piece.MaxX, piece.MaxY, piece.Rotations}
+	return Piece{piece.Shape, piece.Number, piece.Rotations}
 }
 
 func (piece Piece) Flip() Piece {
@@ -124,7 +122,7 @@ func getPiece(grid [][] int8, pieceNumber int8) Piece {
 	}
 
 	//log.Printf("Piece %d: %v", pieceNumber, pieceGrid)
-	return Piece{pieceGrid, pieceNumber, maxX, maxY, getRotations(pieceGrid)}
+	return Piece{pieceGrid, pieceNumber, getRotations(pieceGrid)}
 }
 
 func getRotations(piece Shape) []Shape {

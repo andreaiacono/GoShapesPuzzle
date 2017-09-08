@@ -3,6 +3,8 @@ package main
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
+	//"log"
+	"log"
 )
 
 var found = false
@@ -13,64 +15,77 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 	grid := createEmptyGrid(puzzle.Grid)
 	puzzle.Grid = grid
 
-	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win)
+	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win, 0)
+	log.Printf("Finished solving.")
 }
 
-func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) bool {
+func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, calls int) bool {
 
 	puzzle.Grid = grid
-	//log.Printf("solve with grid: %v, remain: %v", grid, remainingPieces)
+	//log.Printf("solve with grid: %v, remain: %v, calls: %d", grid, remainingPieces, calls)
 	win.QueueDraw()
 	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	if len(remainingPieces) == 0 {
 		found = true
-		return false
+		return true
 	}
 
+	// this loop is for starting placing an always different piece
 	for i := 1; i < len(remainingPieces); i++ {
-		var tmp = remainingPieces[i]
-		remainingPieces[i] = remainingPieces[0]
-		remainingPieces[0] = tmp
 		for _, piece := range remainingPieces {
+			//log.Printf("%s Trying piece %v", tabs(calls), piece)
 			result, updatedGrid := placePiece(piece, grid)
 			if result {
-				remainingPieces = remainingPieces[1:]
-				return solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
-			} else {
-				return false
+				remainingPieces = removePieceFromRemaining(remainingPieces, piece)
+				result := solvePuzzle(updatedGrid, remainingPieces, puzzle, win, calls+1)
+				if result {
+					return true
+				} else {
+					updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
+					remainingPieces = append(remainingPieces, piece )// append([]Piece{piece}, remainingPieces...)
+				}
 			}
-			//append(remainingPieces, piece)
 		}
 	}
 	return false
 }
 
+func removePieceFromRemaining(pieces []Piece, piece Piece) []Piece {
+	for i, v := range pieces {
+		if v.Number == piece.Number {
+			return append(pieces[:i], pieces[i+1:]...)
+		}
+	}
+	return pieces
+}
+
+//func tabs(count int) string {
+//	s := ""
+//	for i := 0; i < count; i++ {
+//		s += "\t"
+//	}
+//	return s
+//}
+
 // placePiece checks if is there room for this piece (or one of its rotations)
 // and if true add the piece to the grid, otherwise return false
 func placePiece(piece Piece, grid [][]int8) (bool, [][]int8) {
 
-	for i := 0; i < len(grid)-piece.MaxX; i++ {
-		for j := 0; j < len(grid[0])-piece.MaxY; j++ {
-			result, index := piecesFit(piece, i, j, grid)
-			if result {
-				//log.Printf("Piece %v could be placed in %v at %d,%d", piece.Rotations[index], grid, i, j)
-				return true, addShapeToGrid(piece.Rotations[index], i, j, grid, piece.Number)
+	// consider all possibile rotation of this piece
+	for index, rot := range piece.Rotations {
+
+		// loops over all possibile cells where to place this piece
+		for i := 0; i <= len(grid)-len(rot); i++ {
+			for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
+				if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) {
+					//log.Printf("Piece %v could be placed in %v at %d,%d", piece.Rotations[index], grid, i, j)
+					return true, addShapeToGrid(piece.Rotations[index], i, j, grid, piece.Number)
+				}
 			}
 		}
 	}
-
 	//log.Printf("Piece %v could NOT be placed in %v", piece.Shape, grid)
 	return false, grid
-}
-
-func piecesFit(piece Piece, dx, dy int, grid [][]int8) (bool, int) {
-
-	for index, rot := range piece.Rotations {
-		if pieceFits(rot, dx, dy, grid) {
-			return true, index
-		}
-	}
-	return false, -1
 }
 
 func pieceFits(shape Shape, dx, dy int, grid [][]int8) bool {
@@ -98,7 +113,19 @@ func addShapeToGrid(shape Shape, dx, dy int, grid [][]int8, number int8) [][]int
 			}
 		}
 	}
+	return updatedGrid
+}
 
+func removeShapeFromGrid(grid [][]int8, number int8) [][]int8 {
+
+	updatedGrid := copyGrid(grid)
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid[0]); j++ {
+			if grid[i][j] == number {
+				updatedGrid[i][j] = EMPTY
+			}
+		}
+	}
 	return updatedGrid
 }
 
@@ -108,7 +135,6 @@ func createEmptyGrid(grid [][]int8) [][]int8 {
 	for i := 0; i < len(grid); i++ {
 		copiedGrid[i] = make([]int8, len(grid[0]))
 	}
-
 	return copiedGrid
 }
 
