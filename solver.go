@@ -3,11 +3,8 @@ package main
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
-	//"log"
 	"log"
 )
-
-var found = false
 
 // returns next solution
 func solver(puzzle *Puzzle, win *gtk.Window) {
@@ -21,12 +18,15 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 
 func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, calls int) bool {
 
+	if ! puzzle.Computing {
+		return false
+	}
+
 	puzzle.Grid = grid
 	//log.Printf("solve with grid: %v, remain: %v, calls: %d", grid, remainingPieces, calls)
 	win.QueueDraw()
 	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	if len(remainingPieces) == 0 {
-		found = true
 		return true
 	}
 

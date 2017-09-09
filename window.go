@@ -133,7 +133,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	statusBar.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	statusBar.SetBorderWidth(5)
 
-	adj, err := gtk.AdjustmentNew(100.0, 0.0, 1000.0, 50.0, 0.0,0.0)
+	adj, err := gtk.AdjustmentNew(100.0, 0.0, 250.0, 5.0, 0.0,0.0)
 	if err != nil {
 		log.Fatal("Unable to create adjustement:", err)
 	}
@@ -158,10 +158,12 @@ func CreateAndStartGui(puzzle Puzzle) {
 
 	btn.Connect("clicked", func() {
 		if isSolving == false {
-			btn.SetLabel("Stop Finding")
+			btn.SetLabel("     Stop Finding     ")
+			puzzle.Computing = true
 			go solver(&puzzle, win)
 		} else {
 			btn.SetLabel("Find new solution")
+			puzzle.Computing = false
 		}
 		isSolving = !isSolving
 	})

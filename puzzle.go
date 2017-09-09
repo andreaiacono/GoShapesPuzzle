@@ -5,4 +5,5 @@ type Puzzle struct {
 	Grid [][]int8
 	MaxSize int8
 	Speed int
+	Computing bool
 }
