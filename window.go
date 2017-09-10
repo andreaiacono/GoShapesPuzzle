@@ -59,7 +59,7 @@ func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
 	colors := GenerateColors(len(puzzle.Pieces))
 
 	grid := puzzle.Grid
-	cellSize := size/float64(puzzle.MaxSize) - 1
+	cellSize := size/float64(puzzle.MaxPieceSide) - 1
 
 	// draws all the cells
 	var i, j int
@@ -142,8 +142,9 @@ func CreateAndStartGui(puzzle Puzzle) {
 		log.Fatal("Unable to create scale:", err)
 	}
 	scale.SetHExpand(true)
+
 	scale.Connect("value-changed", func() {
-		puzzle.Speed = int(scale.GetValue())
+		puzzle.Speed = uint8( adj.GetUpper() - scale.GetValue())
 	})
 
 	btn, err := gtk.ButtonNewWithLabel("Find new solution")

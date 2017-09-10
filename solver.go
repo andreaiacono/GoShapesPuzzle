@@ -16,7 +16,7 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 	log.Printf("Finished solving.")
 }
 
-func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, calls int) bool {
+func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, calls int) bool {
 
 	if ! puzzle.Computing {
 		return false
@@ -33,8 +33,7 @@ func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gt
 	// this loop is for starting placing an always different piece
 	for i := 1; i < len(remainingPieces); i++ {
 		for _, piece := range remainingPieces {
-			//log.Printf("%s Trying piece %v", tabs(calls), piece)
-			result, updatedGrid := placePiece(piece, grid)
+			result, updatedGrid := placePiece(piece, grid, puzzle.MinPieceSize)
 			if result {
 				remainingPieces = removePieceFromRemaining(remainingPieces, piece)
 				result := solvePuzzle(updatedGrid, remainingPieces, puzzle, win, calls+1)
@@ -42,7 +41,7 @@ func solvePuzzle(grid [][]int8, remainingPieces []Piece, puzzle *Puzzle, win *gt
 					return true
 				} else {
 					updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
-					remainingPieces = append(remainingPieces, piece )// append([]Piece{piece}, remainingPieces...)
+					remainingPieces = append(remainingPieces, piece) // append([]Piece{piece}, remainingPieces...)
 				}
 			}
 		}
@@ -59,38 +58,64 @@ func removePieceFromRemaining(pieces []Piece, piece Piece) []Piece {
 	return pieces
 }
 
-//func tabs(count int) string {
-//	s := ""
-//	for i := 0; i < count; i++ {
-//		s += "\t"
-//	}
-//	return s
-//}
-
 // placePiece checks if is there room for this piece (or one of its rotations)
 // and if true add the piece to the grid, otherwise return false
-func placePiece(piece Piece, grid [][]int8) (bool, [][]int8) {
+func placePiece(piece Piece, grid [][]uint8, minPieceSize int) (bool, [][]uint8) {
 
-	// consider all possibile rotation of this piece
-	for index, rot := range piece.Rotations {
+	// consider all possible rotations of this piece
+	for _, rot := range piece.Rotations {
 
-		// loops over all possibile cells where to place this piece
+		// loops over all possible cells where to place this piece
 		for i := 0; i <= len(grid)-len(rot); i++ {
 			for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
-				if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) {
+				if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(grid, minPieceSize) {
 					//log.Printf("Piece %v could be placed in %v at %d,%d", piece.Rotations[index], grid, i, j)
-					return true, addShapeToGrid(piece.Rotations[index], i, j, grid, piece.Number)
+					return true, addShapeToGrid(rot, i, j, grid, piece.Number)
 				}
 			}
 		}
 	}
-	//log.Printf("Piece %v could NOT be placed in %v", piece.Shape, grid)
 	return false, grid
 }
 
-func pieceFits(shape Shape, dx, dy int, grid [][]int8) bool {
+func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
+	var gridCopy = copyGrid(grid)
+	var min = 10000
+	for i := 0; i < len(gridCopy); i++ {
+		for j := 0; j < len(gridCopy[0]); j++ {
+			if gridCopy[i][j] == EMPTY {
+				var area = getAreaSize(&gridCopy, i, j)
+				if min > area {
+					min = area
+				}
+			}
+		}
+	}
+	return min < minPieceSize
+}
 
-	//log.Printf("grid: %v dx %d, dy %d", grid, dx, dy)
+func getAreaSize(grid *[][]uint8, x, y int) int {
+	(*grid)[x][y] = FLOOD_FILL_VALUE
+	size := 1
+
+	if y > 0 && (*grid)[x][y-1] == EMPTY {
+		size += getAreaSize(grid, x, y-1)
+	}
+	if x > 0 && (*grid)[x-1][y] == EMPTY {
+		size += getAreaSize(grid, x-1, y)
+	}
+	if x < len((*grid))-1 && (*grid)[x+1][y] == EMPTY {
+		size += getAreaSize(grid, x+1, y)
+	}
+	if y < len((*grid)[0])-1 && (*grid)[x][y+1] == EMPTY {
+		size += getAreaSize(grid, x, y+1)
+	}
+
+	return size
+}
+
+func pieceFits(shape Shape, dx, dy int, grid [][]uint8) bool {
+
 	for i := 0; i < len(shape); i++ {
 		for j := 0; j < len(shape[0]); j++ {
 			if shape[i][j] != EMPTY && grid[i+dx][j+dy] != EMPTY {
@@ -98,12 +123,11 @@ func pieceFits(shape Shape, dx, dy int, grid [][]int8) bool {
 			}
 		}
 	}
-	//log.Printf("adding %v at %d, %d - %v", shape, dx, dy, grid)
 	return true
 }
 
 // addShapeToGrid writes
-func addShapeToGrid(shape Shape, dx, dy int, grid [][]int8, number int8) [][]int8 {
+func addShapeToGrid(shape Shape, dx, dy int, grid [][]uint8, number uint8) [][]uint8 {
 
 	updatedGrid := copyGrid(grid)
 	for i := 0; i < len(shape); i++ {
@@ -116,7 +140,7 @@ func addShapeToGrid(shape Shape, dx, dy int, grid [][]int8, number int8) [][]int
 	return updatedGrid
 }
 
-func removeShapeFromGrid(grid [][]int8, number int8) [][]int8 {
+func removeShapeFromGrid(grid [][]uint8, number uint8) [][]uint8 {
 
 	updatedGrid := copyGrid(grid)
 	for i := 0; i < len(grid); i++ {
@@ -129,16 +153,16 @@ func removeShapeFromGrid(grid [][]int8, number int8) [][]int8 {
 	return updatedGrid
 }
 
-func createEmptyGrid(grid [][]int8) [][]int8 {
+func createEmptyGrid(grid [][]uint8) [][]uint8 {
 
-	var copiedGrid = make([][]int8, len(grid))
+	var copiedGrid = make([][]uint8, len(grid))
 	for i := 0; i < len(grid); i++ {
-		copiedGrid[i] = make([]int8, len(grid[0]))
+		copiedGrid[i] = make([]uint8, len(grid[0]))
 	}
 	return copiedGrid
 }
 
-func copyGrid(grid [][]int8) [][]int8 {
+func copyGrid(grid [][]uint8) [][]uint8 {
 
 	copiedGrid := createEmptyGrid(grid)
 

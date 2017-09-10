@@ -13,6 +13,7 @@ type Color struct {
 }
 
 const EMPTY = 0
+const FLOOD_FILL_VALUE = 255
 
 func DrawRectangle(x float64, y float64, width float64, height float64, cr *cairo.Context) {
 	cr.MoveTo(x, y)

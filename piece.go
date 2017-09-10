@@ -1,15 +1,16 @@
 package main
 
-type Shape [][]int8
+type Shape [][]uint8
 
 type Piece struct {
-	Shape     [][]int8
-	Number    int8
+	Shape     Shape
+	Number    uint8
 	Rotations []Shape
+	Size 	  int
 }
 
 func copyPiece(piece Piece) Piece {
-	return Piece{piece.Shape, piece.Number, piece.Rotations}
+	return Piece{piece.Shape, piece.Number, piece.Rotations, piece.Size}
 }
 
 func (piece Piece) Flip() Piece {
@@ -42,7 +43,7 @@ func rotate(shape Shape) Shape {
 	var m = len(shape[0])
 	var rotatedShape Shape = make(Shape, m)
 	for ii := 0; ii < m; ii++ {
-		rotatedShape[ii] = make([]int8, n)
+		rotatedShape[ii] = make([]uint8, n)
 	}
 
 	for i := 0; i < n; i++ {
@@ -56,7 +57,7 @@ func rotate(shape Shape) Shape {
 func copyShape(shape Shape) Shape {
 	var copiedShape = make(Shape, len(shape))
 	for i := 0; i < len(shape); i++ {
-		copiedShape[i] = make([]int8, len(shape[0]))
+		copiedShape[i] = make([]uint8, len(shape[0]))
 	}
 
 	var i, j int
@@ -68,29 +69,31 @@ func copyShape(shape Shape) Shape {
 	return copiedShape
 }
 
-func GetPiecesFromGrid(grid [][]int8) []Piece {
+func GetPiecesFromGrid(grid [][]uint8) []Piece {
 	pieces := []Piece{}
 	values := getValuesFromGrid(grid)
 
 	var i int
 	for i = 0; i < len(values); i++ {
-		pieces = append(pieces, getPiece(grid, int8(values[i])))
+		pieces = append(pieces, getPiece(grid, uint8(values[i])))
 	}
 
 	return pieces
 }
 
-func getPiece(grid [][] int8, pieceNumber int8) Piece {
+func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
 
 	var minX = 1000
 	var minY = 1000
 	var maxX = 0
 	var maxY = 0
 	var i, j int
+	var size int = 0
 
 	for i = 0; i < len(grid); i++ {
 		for j = 0; j < len(grid[i]); j++ {
 			if grid[i][j] == pieceNumber {
+				size ++
 				if i < minX {
 					minX = i
 				}
@@ -108,9 +111,9 @@ func getPiece(grid [][] int8, pieceNumber int8) Piece {
 	}
 	//log.Printf("Piece n. %d, maxX:%d maxY:%d, minX:%d, minY:%d", pieceNumber, maxX, maxY, minX, minY)
 
-	pieceGrid := make([][]int8, maxX-minX+1)
+	pieceGrid := make([][]uint8, maxX-minX+1)
 	for i := range pieceGrid {
-		pieceGrid[i] = make([]int8, maxY-minY+1)
+		pieceGrid[i] = make([]uint8, maxY-minY+1)
 	}
 
 	for i = minX; i <= maxX; i++ {
@@ -122,7 +125,7 @@ func getPiece(grid [][] int8, pieceNumber int8) Piece {
 	}
 
 	//log.Printf("Piece %d: %v", pieceNumber, pieceGrid)
-	return Piece{pieceGrid, pieceNumber, getRotations(pieceGrid)}
+	return Piece{pieceGrid, pieceNumber, getRotations(pieceGrid), size}
 }
 
 func getRotations(piece Shape) []Shape {
@@ -148,10 +151,10 @@ func getRotations(piece Shape) []Shape {
 	return rotations[:]
 }
 
-func getValuesFromGrid(grid [][]int8) []int8 {
+func getValuesFromGrid(grid [][]uint8) []uint8 {
 
 	var i, j int
-	var values = []int8{}
+	var values = []uint8{}
 
 	for i = 0; i < len(grid); i++ {
 		for j = 0; j < len(grid[i]); j++ {
@@ -163,7 +166,7 @@ func getValuesFromGrid(grid [][]int8) []int8 {
 	return values
 }
 
-func contains(values []int8, value int8) bool {
+func contains(values []uint8, value uint8) bool {
 	var i int
 	for i = 0; i < len(values); i++ {
 		if values[i] == value {

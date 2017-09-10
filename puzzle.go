@@ -1,9 +1,10 @@
 package main
 
 type Puzzle struct {
-	Pieces []Piece
-	Grid [][]int8
-	MaxSize int8
-	Speed int
-	Computing bool
+	Pieces       []Piece
+	Grid         [][]uint8
+	MaxPieceSide int8
+	Speed        uint8
+	Computing    bool
+	MinPieceSize int
 }
