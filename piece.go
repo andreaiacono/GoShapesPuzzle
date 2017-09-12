@@ -134,21 +134,54 @@ func getRotations(piece Shape) []Shape {
 	// piece and its 3 90-degrees rotation: 8 in total
 	var rotations [8]Shape
 	rotations[0] = copyShape(piece)
+	var count = 1
 
 	var i int
 	for i = 0; i < 3; i++ {
 		piece = rotate(piece)
-		rotations[i+1] = copyShape(piece)
+		if ! containsShape(rotations[:], piece) {
+			rotations[count] = copyShape(piece)
+			count ++
+		}
 	}
 	piece = flip(piece)
-	rotations[4] = piece
+	if !containsShape(rotations[:], piece) {
+		rotations[count] = piece
+		count ++
+	}
 	for i = 0; i < 3; i++ {
 		piece = rotate(piece)
-		rotations[i+5] = copyShape(piece)
+		if ! containsShape(rotations[:], piece) {
+			rotations[count] = copyShape(piece)
+			count ++
+		}
 	}
 
-	//FIXME remove symmetries!
-	return rotations[:]
+	return rotations[0:count]
+}
+
+func containsShape(shapes []Shape, newShape Shape) bool {
+	for _, shape := range shapes {
+		if areEqualPieces(shape, newShape) {
+			return true
+		}
+	}
+	return false
+}
+func areEqualPieces(shape1 Shape, shape2 Shape) bool {
+	if len(shape1) != len(shape2) || len(shape1[0]) != len(shape2[0]) {
+		return false
+	}
+
+	for i := 0; i < len(shape1); i++ {
+		for j := 0; j < len(shape1[0]); j++ {
+			if shape1[i][j] != shape2[i][j] {
+				return false
+			}
+		}
+
+	}
+	return true
 }
 
 func getValuesFromGrid(grid [][]uint8) []uint8 {
