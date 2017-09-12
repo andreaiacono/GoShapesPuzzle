@@ -5,6 +5,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/gotk3/gotk3/cairo"
 	"errors"
+	"strconv"
 )
 
 var grey = Color{0.2, 0.2, 0.2}
@@ -66,13 +67,17 @@ func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
 	for i = 0; i < len(grid); i++ {
 		for j = 0; j < len(grid[0]); j++ {
 			if grid[i][j] > 0 {
-				drawCell(i, j, cellSize, colors[grid[i][j]-1], cr)
+				var number = ""
+				if puzzle.DrawNumbers {
+					number = strconv.Itoa(int(grid[i][j]))
+				}
+				drawCell(i, j, cellSize, colors[grid[i][j]-1], cr, number)
 			}
 		}
 	}
 }
 
-func drawCell(i int, j int, cellSize float64, color Color, cr *cairo.Context) {
+func drawCell(i int, j int, cellSize float64, color Color, cr *cairo.Context, num string) {
 
 	// computes where to locate the cell
 	x := 9 + cellSize*float64(i)
@@ -85,7 +90,7 @@ func drawCell(i int, j int, cellSize float64, color Color, cr *cairo.Context) {
 
 	// draws the border of the cell
 	setColor(grey, cr)
-	DrawRectangle(x, y, cellSize, cellSize, cr)
+	DrawRectangle(x, y, cellSize, cellSize, cr, num)
 }
 
 func setColor(color Color, context *cairo.Context) {
@@ -103,7 +108,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	if err != nil {
 		log.Fatal("Unable to create window:", err)
 	}
-	win.SetTitle("Grid Example")
+	win.SetTitle("Shape Puzzle Solver")
 	win.Connect("destroy", func() {
 		gtk.MainQuit()
 	})
@@ -133,7 +138,8 @@ func CreateAndStartGui(puzzle Puzzle) {
 	statusBar.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	statusBar.SetBorderWidth(5)
 
-	adj, err := gtk.AdjustmentNew(100.0, 0.0, 250.0, 5.0, 0.0,0.0)
+	upper := 1000.0
+	adj, err := gtk.AdjustmentNew(float64(upper - StartingSpeed), 0.0, upper, 5.0, 0.0,0.0)
 	if err != nil {
 		log.Fatal("Unable to create adjustement:", err)
 	}
@@ -142,9 +148,10 @@ func CreateAndStartGui(puzzle Puzzle) {
 		log.Fatal("Unable to create scale:", err)
 	}
 	scale.SetHExpand(true)
+	scale.SetDrawValue(false)
 
 	scale.Connect("value-changed", func() {
-		puzzle.Speed = uint8( adj.GetUpper() - scale.GetValue())
+		puzzle.Speed = uint( adj.GetUpper() - scale.GetValue())
 	})
 
 	btn, err := gtk.ButtonNewWithLabel("Find new solution")
@@ -190,7 +197,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 
 		// draws border
 		cr.SetSourceRGB(0.1, 0.1, 0.1)
-		DrawRectangle(0, 0, width, height, cr)
+		DrawRectangle(0, 0, width, height, cr, "")
 
 		// draws the gtkGrid
 		drawGrid(puzzle, size, cr)
