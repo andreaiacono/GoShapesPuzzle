@@ -8,11 +8,12 @@ import (
 	"strconv"
 )
 
+var filename string
 var grey = Color{0.2, 0.2, 0.2}
 
 func openFile() (Puzzle, error) {
 
-	filename := getFilenameFromUser()
+	filename = getFilenameFromUser()
 
 	var puzzle Puzzle
 	if filename != "" {
@@ -172,6 +173,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 		} else {
 			btn.SetLabel("Find new solution")
 			puzzle.Computing = false
+			ReadFile(filename)
 		}
 		isSolving = !isSolving
 	})
@@ -252,3 +254,4 @@ func CreateAndStartGui(puzzle Puzzle) {
 
 	gtk.Main()
 }
+

@@ -24,17 +24,17 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	}
 
 	puzzle.Grid = grid
+	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	//log.Printf("solve with grid: %v, remain: %v, calls: %d", grid, remainingPieces, calls)
 	win.QueueDraw()
-	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	if len(remainingPieces) == 0 {
 		return true
 	}
+	minPieceSize := minPieceSize(remainingPieces)
 
 	// this loop is for starting placing an always different piece
 	for i := 1; i < len(remainingPieces); i++ {
 		for _, piece := range remainingPieces {
-			minPieceSize := minPieceSize(remainingPieces)
 			result, updatedGrid := placePiece(piece, grid, minPieceSize)
 			if result {
 				remainingPieces = removePieceFromRemaining(remainingPieces, piece)
@@ -43,7 +43,7 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 					return true
 				} else {
 					updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
-					remainingPieces = append(remainingPieces, piece) // append([]Piece{piece}, remainingPieces...)
+					remainingPieces = append(remainingPieces, piece)
 				}
 			}
 		}
@@ -70,8 +70,7 @@ func placePiece(piece Piece, grid [][]uint8, minPieceSize int) (bool, [][]uint8)
 		// loops over all possible cells where to place this piece
 		for i := 0; i <= len(grid)-len(rot); i++ {
 			for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
-				if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(grid, minPieceSize) {
-					//log.Printf("Piece %v could be placed in %v at %d,%d", rot, grid, i, j)
+				if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(grid, rot, i, j, piece.Number, minPieceSize) {
 					return true, addShapeToGrid(rot, i, j, grid, piece.Number)
 				}
 			}
@@ -80,8 +79,9 @@ func placePiece(piece Piece, grid [][]uint8, minPieceSize int) (bool, [][]uint8)
 	return false, grid
 }
 
-func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
+func hasLeftUnfillableAreas(grid [][]uint8, shape Shape, i, j int, number uint8, minPieceSize int) bool {
 	var gridCopy = copyGrid(grid)
+	gridCopy = addShapeToGrid(shape, i, j, gridCopy, number)
 	var min = 10000
 	for i := 0; i < len(gridCopy); i++ {
 		for j := 0; j < len(gridCopy[0]); j++ {

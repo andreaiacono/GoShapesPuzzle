@@ -44,14 +44,17 @@ func ReadFile(filename string) (Puzzle, error) {
 
 	pieces := GetPiecesFromGrid(grid)
 
-	return Puzzle{
+	var puzzle = Puzzle{
 		pieces,
 		grid[:],
 		max(int8(len(rows)), maxLen),
 		StartingSpeed,
 		false,
 		minPieceSize(pieces),
-		false}, nil
+		false}
+
+	puzzle.ShufflePieces()
+	return puzzle, nil
 }
 
 func max(a int8, b int8) int8 {
