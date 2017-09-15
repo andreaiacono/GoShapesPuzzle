@@ -56,12 +56,11 @@ func getFilenameFromUser() string {
 	return filename
 }
 
-func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
+func drawGrid(puzzle Puzzle, cellSize float64, cr *cairo.Context) {
 
 	colors := GenerateColors(len(puzzle.Pieces))
 
 	grid := puzzle.Grid
-	cellSize := size/float64(puzzle.MaxPieceSide) - 1
 
 	// draws all the cells
 	var i, j int
@@ -72,7 +71,7 @@ func drawGrid(puzzle Puzzle, size float64, cr *cairo.Context) {
 				if puzzle.DrawNumbers {
 					number = strconv.Itoa(int(grid[i][j]))
 				}
-				drawCell(i, j, cellSize, colors[grid[i][j]-1], cr, number)
+				drawCell(j, i, cellSize, colors[grid[i][j]-1], cr, number)
 			}
 		}
 	}
@@ -103,7 +102,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	gtk.Init(nil)
 
 	isSolving := false
-	size := float64(150)
+	cellSize := float64(150)
 
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if err != nil {
@@ -140,7 +139,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	statusBar.SetBorderWidth(5)
 
 	upper := 1000.0
-	adj, err := gtk.AdjustmentNew(float64(upper - StartingSpeed), 0.0, upper, 5.0, 0.0,0.0)
+	adj, err := gtk.AdjustmentNew(float64(upper-StartingSpeed), 0.0, upper, 5.0, 0.0, 0.0)
 	if err != nil {
 		log.Fatal("Unable to create adjustement:", err)
 	}
@@ -152,7 +151,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	scale.SetDrawValue(false)
 
 	scale.Connect("value-changed", func() {
-		puzzle.Speed = uint( adj.GetUpper() - scale.GetValue())
+		puzzle.Speed = uint(adj.GetUpper() - scale.GetValue())
 	})
 
 	btn, err := gtk.ButtonNewWithLabel("Find new solution")
@@ -181,28 +180,32 @@ func CreateAndStartGui(puzzle Puzzle) {
 	da.SetHExpand(true)
 	da.SetVExpand(true)
 
-
 	da.Connect("draw", func(da *gtk.DrawingArea, cr *cairo.Context) {
-		width := float64(da.GetAllocatedWidth())
-		height := float64(da.GetAllocatedHeight())
+		windowWidth := float64(da.GetAllocatedWidth())
+		windowHeight := float64(da.GetAllocatedHeight())
+		windowRatio := windowWidth / windowHeight
 
-		if width > height {
-			size = height - 10
+		puzzleWidth := float64(len(puzzle.Grid[0]))
+		puzzleHeight := float64(len(puzzle.Grid))
+		puzzleRatio := puzzleWidth / puzzleHeight
+
+		if windowRatio > puzzleRatio {
+			cellSize = (windowHeight-20)/puzzleHeight
 		} else {
-			size = width - 10
+			cellSize = (windowWidth-20)/puzzleWidth
 		}
 
 		// draws background
 		cr.SetSourceRGB(1, 1, 1)
-		cr.Rectangle(0, 0, width, height)
+		cr.Rectangle(0, 0, windowWidth, windowHeight)
 		cr.Fill()
 
 		// draws border
 		cr.SetSourceRGB(0.1, 0.1, 0.1)
-		DrawRectangle(0, 0, width, height, cr, "")
+		DrawRectangle(0, 0, windowWidth, windowHeight, cr, "")
 
 		// draws the gtkGrid
-		drawGrid(puzzle, size, cr)
+		drawGrid(puzzle, cellSize, cr)
 	})
 
 	// creates menu
@@ -248,10 +251,8 @@ func CreateAndStartGui(puzzle Puzzle) {
 	statusBar.Add(scale)
 	gtkGrid.Add(statusBar)
 
-
 	win.Add(gtkGrid)
 	win.ShowAll()
 
 	gtk.Main()
 }
-
