@@ -16,9 +16,5 @@ func main() {
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
 	}
-	puzzle, err := ReadFile(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	CreateAndStartGui(puzzle)
+	CreateAndStartGui(filename)
 }

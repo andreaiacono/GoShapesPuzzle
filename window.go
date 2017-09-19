@@ -11,19 +11,19 @@ import (
 var filename string
 var grey = Color{0.2, 0.2, 0.2}
 
-func openFile() (Puzzle, error) {
+func openFile(statusBar gtk.Statusbar) (Puzzle, error) {
 
 	filename = getFilenameFromUser()
 
 	var puzzle Puzzle
 	if filename != "" {
-		puzzle, err := ReadFile(filename)
+		puzzle, err := ReadFile(filename, statusBar)
 		if err != nil {
 			return puzzle, err
 		}
 		return puzzle, nil
 	}
-	return puzzle, errors.New("User canceled action")
+	return puzzle, errors.New("User canceled action.")
 }
 
 func getFilenameFromUser() string {
@@ -97,7 +97,7 @@ func setColor(color Color, context *cairo.Context) {
 	context.SetSourceRGB(color.R, color.G, color.B)
 }
 
-func CreateAndStartGui(puzzle Puzzle) {
+func CreateAndStartGui(filename string) {
 
 	gtk.Init(nil)
 
@@ -131,12 +131,12 @@ func CreateAndStartGui(puzzle Puzzle) {
 		log.Fatal("Unable to create drawingarea:", err)
 	}
 
-	statusBar, err := gtk.GridNew()
+	controlsGrid, err := gtk.GridNew()
 	if err != nil {
 		log.Fatal("Unable to create statusbar:", err)
 	}
-	statusBar.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
-	statusBar.SetBorderWidth(5)
+	controlsGrid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
+	controlsGrid.SetBorderWidth(5)
 
 	upper := 1000.0
 	adj, err := gtk.AdjustmentNew(float64(upper-StartingSpeed), 0.0, upper, 5.0, 0.0, 0.0)
@@ -149,6 +149,25 @@ func CreateAndStartGui(puzzle Puzzle) {
 	}
 	scale.SetHExpand(true)
 	scale.SetDrawValue(false)
+
+	statusBar, err := gtk.StatusbarNew()
+	if err != nil {
+		log.Fatal("Unable to create statusbar:", err)
+	}
+	statusBar.SetBorderWidth(0)
+	statusBar.SetMarginBottom(0)
+	statusBar.SetMarginTop(0)
+	statusBar.SetMarginStart(0)
+	statusBar.GetStyleContext()
+	//statusBar.
+	//statusBar.GetChildren()[0].setShadow(gtk.SHADOW_ETCHED_IN)
+	//statusBar.se
+	statusBar.Push(1, "Ready")
+
+	puzzle, err := ReadFile(filename, *statusBar)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	scale.Connect("value-changed", func() {
 		puzzle.Speed = uint(adj.GetUpper() - scale.GetValue())
@@ -168,11 +187,12 @@ func CreateAndStartGui(puzzle Puzzle) {
 		if isSolving == false {
 			btn.SetLabel("     Stop Finding     ")
 			puzzle.Computing = true
+			puzzle.StatusBar.Push(1, "Solving...")
 			go solver(&puzzle, win)
 		} else {
 			btn.SetLabel("Find new solution")
 			puzzle.Computing = false
-			ReadFile(filename)
+			ReadFile(filename, puzzle.StatusBar)
 		}
 		isSolving = !isSolving
 	})
@@ -230,7 +250,7 @@ func CreateAndStartGui(puzzle Puzzle) {
 	}
 
 	openMenuItem.Connect("activate", func() {
-		newPuzzle, err := openFile()
+		newPuzzle, err := openFile(puzzle.StatusBar)
 		if err != nil {
 			log.Print(err)
 			return
@@ -246,11 +266,12 @@ func CreateAndStartGui(puzzle Puzzle) {
 	gtkGrid.Attach(menuBar, 0, 0, 200, 200)
 
 	gtkGrid.Add(da)
-	statusBar.Add(btn)
-	statusBar.Add(infoLabel)
-	statusBar.Add(scale)
-	gtkGrid.Add(statusBar)
+	controlsGrid.Add(btn)
+	controlsGrid.Add(infoLabel)
+	controlsGrid.Add(scale)
+	gtkGrid.Add(controlsGrid)
 
+	gtkGrid.Add(statusBar)
 	win.Add(gtkGrid)
 	win.ShowAll()
 

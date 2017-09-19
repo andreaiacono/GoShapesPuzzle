@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
-	"log"
+	//"log"
 	"fmt"
 )
 
@@ -19,7 +19,7 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 		puzzle.Grid = solutions[0]
 	}
 	win.QueueDraw()
-	log.Printf("\nFinished solving. Found %d solutions.", len(solutions))
+	puzzle.StatusBar.Push(1, "Finished solving")
 }
 
 func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, solutions *[][][]uint8) bool {
@@ -32,7 +32,7 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	win.QueueDraw()
 	if len(remainingPieces) == 0 {
-		addSolution(solutions, grid)
+		addSolution(solutions, grid, puzzle.StatusBar)
 		return true
 	}
 	minPieceSize := minPieceSize(remainingPieces)
@@ -59,14 +59,14 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	return false
 }
 
-func addSolution(solutions *[][][]uint8, solution [][]uint8) [][][]uint8 {
+func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar) [][][]uint8 {
 	for sol := range *solutions {
 		if areEqualPieces((*solutions)[sol],solution) {
 			return *solutions
 		}
 	}
 	*solutions = append(*solutions, solution)
-	fmt.Printf("\rFound %d solutions.", len(*solutions))
+	statusBar.Push(1, fmt.Sprintf("Found %d solutions", len(*solutions)))
 	return *solutions
 }
 

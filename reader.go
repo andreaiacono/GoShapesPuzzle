@@ -4,9 +4,10 @@ import (
 	"io/ioutil"
 	"strings"
 	"errors"
+	"github.com/gotk3/gotk3/gtk"
 )
 
-func ReadFile(filename string) (Puzzle, error) {
+func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
 
 	dat, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -51,7 +52,8 @@ func ReadFile(filename string) (Puzzle, error) {
 		StartingSpeed,
 		false,
 		minPieceSize(pieces),
-		false}
+		false,
+		statusBar}
 
 	return puzzle, nil
 }

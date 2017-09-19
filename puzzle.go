@@ -1,6 +1,9 @@
 package main
 
-import "math/rand"
+import (
+	"math/rand"
+	"github.com/gotk3/gotk3/gtk"
+)
 
 type Puzzle struct {
 	Pieces       []Piece
@@ -9,9 +12,9 @@ type Puzzle struct {
 	Speed        uint
 	Computing    bool
 	MinPieceSize int
-	DrawNumbers	 bool
+	DrawNumbers  bool
+	StatusBar    gtk.Statusbar
 }
-
 
 func (puzzle *Puzzle) ShufflePieces() {
 	shuffledPieces := make([]Piece, len(puzzle.Pieces))
