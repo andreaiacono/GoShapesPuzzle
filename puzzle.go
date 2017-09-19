@@ -14,6 +14,7 @@ type Puzzle struct {
 	MinPieceSize int
 	DrawNumbers  bool
 	StatusBar    gtk.Statusbar
+	Solutions	 *[][][]uint8
 }
 
 func (puzzle *Puzzle) ShufflePieces() {

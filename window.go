@@ -56,11 +56,11 @@ func getFilenameFromUser() string {
 	return filename
 }
 
-func drawGrid(puzzle Puzzle, cellSize float64, cr *cairo.Context) {
+func drawGrid(puzzle Puzzle, grid [][]uint8, cellSize float64, cr *cairo.Context) {
 
 	colors := GenerateColors(len(puzzle.Pieces))
 
-	grid := puzzle.Grid
+	//grid := puzzle.Grid
 
 	// draws all the cells
 	var i, j int
@@ -225,7 +225,7 @@ func CreateAndStartGui(filename string) {
 		DrawRectangle(0, 0, windowWidth, windowHeight, cr, "")
 
 		// draws the gtkGrid
-		drawGrid(puzzle, cellSize, cr)
+		drawGrid(puzzle, puzzle.Grid, cellSize, cr)
 	})
 
 	// creates menu
@@ -262,6 +262,29 @@ func CreateAndStartGui(filename string) {
 	fileMenuItem.SetSubmenu(fileMenu)
 	fileMenu.Append(openMenuItem)
 	menuBar.Append(fileMenuItem)
+
+	viewMenu, err := gtk.MenuNew()
+	if err != nil {
+		log.Fatal("Unable to create view menu:", err)
+	}
+
+	viewMenuItem, err := gtk.MenuItemNewWithLabel("View")
+	if err != nil {
+		log.Fatal("Unable to create menuitem:", err)
+	}
+
+	solutionsMenuItem, err := gtk.MenuItemNewWithLabel("Solutions")
+	if err != nil {
+		log.Fatal("Unable to create menuitem:", err)
+	}
+
+	viewMenuItem.SetSubmenu(viewMenu)
+	viewMenu.Append(solutionsMenuItem)
+	menuBar.Append(viewMenuItem)
+
+	solutionsMenuItem.Connect("activate", func() {
+		ShowSolutions(puzzle)
+	})
 
 	gtkGrid.Attach(menuBar, 0, 0, 200, 200)
 

@@ -44,6 +44,8 @@ func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
 	}
 
 	pieces := GetPiecesFromGrid(grid)
+	var solutions [][][]uint8
+
 
 	var puzzle = Puzzle{
 		pieces,
@@ -53,7 +55,9 @@ func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
 		false,
 		minPieceSize(pieces),
 		false,
-		statusBar}
+		statusBar,
+		&solutions,
+		}
 
 	return puzzle, nil
 }

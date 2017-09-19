@@ -12,17 +12,16 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 
 	grid := createEmptyGrid(puzzle.Grid)
 	puzzle.Grid = grid
-	var solutions [][][]uint8
 
-	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win, &solutions)
-	if len(solutions) > 0 {
-		puzzle.Grid = solutions[0]
+	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win)
+	if len(*puzzle.Solutions) > 0 {
+		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
 	win.QueueDraw()
 	puzzle.StatusBar.Push(1, "Finished solving")
 }
 
-func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window, solutions *[][][]uint8) bool {
+func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) bool {
 
 	if ! puzzle.Computing {
 		return false
@@ -32,7 +31,7 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
 	win.QueueDraw()
 	if len(remainingPieces) == 0 {
-		addSolution(solutions, grid, puzzle.StatusBar)
+		addSolution(puzzle.Solutions, grid, puzzle.StatusBar)
 		return true
 	}
 	minPieceSize := minPieceSize(remainingPieces)
@@ -45,7 +44,7 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 				result, updatedGrid := placePiece(rot, grid, minPieceSize, piece.Number)
 				if result {
 					remainingPieces = removePieceFromRemaining(remainingPieces, piece)
-					result := solvePuzzle(updatedGrid, remainingPieces, puzzle, win, solutions)
+					result := solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
 					if !result {
 						updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
 						remainingPieces = append(remainingPieces, piece)
