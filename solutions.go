@@ -20,9 +20,9 @@ func ShowSolutions(puzzle Puzzle) {
 		log.Fatal("Unable to create window:", err)
 	}
 	win.SetTitle("Solutions")
-	//win.Connect("destroy", func() {
-	//	gtk.MainQuit()
-	//})
+	win.Connect("destroy", func() {
+		gtk.MainQuit()
+	})
 
 	//win.SetPosition(gtk.WIN_POS_CENTER)
 	width, height := 340, 400
@@ -117,6 +117,8 @@ func ShowSolutions(puzzle Puzzle) {
 		// draws the gtkGrid
 		if len(*puzzle.Solutions) > 0 {
 			drawGrid(puzzle, (*puzzle.Solutions)[index], cellSize, cr)
+		} else {
+			label.SetText("No solutions found yet")
 		}
 	})
 
