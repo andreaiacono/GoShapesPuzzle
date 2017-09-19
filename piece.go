@@ -109,7 +109,6 @@ func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
 			}
 		}
 	}
-	//log.Printf("Piece n. %d, maxX:%d maxY:%d, minX:%d, minY:%d", pieceNumber, maxX, maxY, minX, minY)
 
 	pieceGrid := make([][]uint8, maxX-minX+1)
 	for i := range pieceGrid {
@@ -123,8 +122,6 @@ func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
 			}
 		}
 	}
-
-	//log.Printf("Piece %d: %v", pieceNumber, pieceGrid)
 	return Piece{pieceGrid, pieceNumber, getRotations(pieceGrid), size}
 }
 
@@ -168,6 +165,7 @@ func containsShape(shapes []Shape, newShape Shape) bool {
 	}
 	return false
 }
+
 func areEqualPieces(shape1 Shape, shape2 Shape) bool {
 	if len(shape1) != len(shape2) || len(shape1[0]) != len(shape2[0]) {
 		return false

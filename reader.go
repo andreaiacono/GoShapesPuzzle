@@ -53,7 +53,6 @@ func ReadFile(filename string) (Puzzle, error) {
 		minPieceSize(pieces),
 		false}
 
-	puzzle.ShufflePieces()
 	return puzzle, nil
 }
 
