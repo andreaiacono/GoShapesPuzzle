@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	filename, err := filepath.Abs("github.com/shapes/models/default.model")
+	filename, err := filepath.Abs("github.com/shapes/models/6x6.model")
 	if err != nil {
 		log.Fatal(err)
 	}
