@@ -15,6 +15,7 @@ type Puzzle struct {
 	DrawNumbers  bool
 	StatusBar    gtk.Statusbar
 	Solutions	 *[][][]uint8
+	UseGui		 bool
 }
 
 func (puzzle *Puzzle) ShufflePieces() {

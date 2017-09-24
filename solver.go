@@ -4,10 +4,11 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
 	"fmt"
+	"log"
 )
 
-// returns next solution
-func solver(puzzle *Puzzle, win *gtk.Window) {
+// solves the puzzle
+func Solver(puzzle *Puzzle, win *gtk.Window) {
 
 	grid := createEmptyGrid(puzzle.Grid)
 	puzzle.Grid = grid
@@ -16,10 +17,16 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 	if len(*puzzle.Solutions) > 0 {
 		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
-	win.QueueDraw()
-	puzzle.StatusBar.Push(1, fmt.Sprintf("Finished solving. Found %d solutions.", len(*puzzle.Solutions)))
+	message := fmt.Sprintf("Finished solving. Found %d solutions.", len(*puzzle.Solutions))
+	if puzzle.UseGui {
+		win.QueueDraw()
+		puzzle.StatusBar.Push(1, message)
+	} else {
+		log.Println(message)
+	}
 }
 
+// the recursive solving function
 func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) {
 
 	if ! puzzle.Computing {
@@ -27,10 +34,12 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	}
 
 	puzzle.Grid = grid
-	time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
-	win.QueueDraw()
+	if puzzle.UseGui {
+		time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
+		win.QueueDraw()
+	}
 	if len(remainingPieces) == 0 {
-		addSolution(puzzle.Solutions, grid, puzzle.StatusBar)
+		addSolution(puzzle.Solutions, grid, puzzle.StatusBar, puzzle.UseGui)
 		return
 	}
 	minPieceSize := minPieceSize(remainingPieces)
@@ -76,14 +85,20 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 // create a map with the placed pieces and positions, and check if the chosen configuraiton
 // has been already computed
 
-func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar) [][][]uint8 {
+func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar, useGui bool) [][][]uint8 {
+
 	for sol := range *solutions {
 		if areEqualPieces((*solutions)[sol], solution) {
 			return *solutions
 		}
 	}
 	*solutions = append(*solutions, solution)
-	statusBar.Push(1, fmt.Sprintf("Found %d solutions", len(*solutions)))
+
+	if useGui {
+		statusBar.Push(1, fmt.Sprintf("Found %d solutions", len(*solutions)))
+	} else {
+		log.Printf("Solution #%d: %v",  len(*solutions), solution)
+	}
 	return *solutions
 }
 
@@ -98,23 +113,8 @@ func removePieceFromRemaining(pieces []Piece, piece Piece) ([]Piece, int) {
 	return pieces, -1
 }
 
-//// placePiece checks if is there room for this piece (or one of its rotations)
-//// and if true add the piece to the grid, otherwise return false
-//func placePiece(rot Shape, grid [][]uint8, minPieceSize int, number uint8) (bool, [][]uint8) {
-//
-//	// loops over all possible cells where to place this piece
-//	for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
-//		for i := 0; i <= len(grid)-len(rot); i++ {
-//			gridCopy := addShapeToGrid(rot, i, j, grid, number)
-//			if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(gridCopy, minPieceSize) {
-//				return true, gridCopy
-//			}
-//		}
-//	}
-//	return false, grid
-//}
-
 func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
+
 	var gridCopy = copyGrid(grid)
 	var min = 10000
 	for i := 0; i < len(gridCopy); i++ {
@@ -131,6 +131,7 @@ func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
 }
 
 func getAreaSize(grid *[][]uint8, x, y int) int {
+
 	(*grid)[x][y] = FLOOD_FILL_VALUE
 	size := 1
 
@@ -146,7 +147,6 @@ func getAreaSize(grid *[][]uint8, x, y int) int {
 	if y < len((*grid)[0])-1 && (*grid)[x][y+1] == EMPTY {
 		size += getAreaSize(grid, x, y+1)
 	}
-
 	return size
 }
 

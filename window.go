@@ -17,13 +17,13 @@ func openFile(statusBar gtk.Statusbar) (Puzzle, error) {
 
 	var puzzle Puzzle
 	if filename != "" {
-		puzzle, err := ReadFile(filename, statusBar)
+		puzzle, err := ReadFile(filename, statusBar, true)
 		if err != nil {
 			return puzzle, err
 		}
 		return puzzle, nil
 	}
-	return puzzle, errors.New("User canceled action.")
+	return puzzle, errors.New("user canceled action")
 }
 
 func getFilenameFromUser() string {
@@ -158,13 +158,9 @@ func CreateAndStartGui(filename string) {
 	statusBar.SetMarginBottom(0)
 	statusBar.SetMarginTop(0)
 	statusBar.SetMarginStart(0)
-	statusBar.GetStyleContext()
-	//statusBar.
-	//statusBar.GetChildren()[0].setShadow(gtk.SHADOW_ETCHED_IN)
-	//statusBar.se
 	statusBar.Push(1, "Ready")
 
-	puzzle, err := ReadFile(filename, *statusBar)
+	puzzle, err := ReadFile(filename, *statusBar, true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -188,11 +184,11 @@ func CreateAndStartGui(filename string) {
 			btn.SetLabel("     Stop Finding     ")
 			puzzle.Computing = true
 			puzzle.StatusBar.Push(1, "Solving...")
-			go solver(&puzzle, win)
+			go Solver(&puzzle, win)
 		} else {
 			btn.SetLabel("Find new solution")
 			puzzle.Computing = false
-			ReadFile(filename, puzzle.StatusBar)
+			ReadFile(filename, puzzle.StatusBar, true)
 		}
 		isSolving = !isSolving
 	})

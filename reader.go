@@ -7,7 +7,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
+func ReadFile(filename string, statusBar gtk.Statusbar, useGui bool) (Puzzle, error) {
 
 	dat, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -34,7 +34,7 @@ func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
 			} else if val >= 65 && val <= 90 {
 				rowValues = append(rowValues, uint8(val-55))
 			} else {
-				return Puzzle{}, errors.New("Only numbers and characters allowed in model.")
+				return Puzzle{}, errors.New("only numbers and characters allowed in model")
 			}
 		}
 		if maxLen < counter {
@@ -57,6 +57,7 @@ func ReadFile(filename string, statusBar gtk.Statusbar) (Puzzle, error) {
 		false,
 		statusBar,
 		&solutions,
+		useGui,
 		}
 
 	return puzzle, nil
