@@ -49,7 +49,7 @@ func ShowSolutions(puzzle Puzzle) {
 	controlsGrid.SetOrientation(gtk.ORIENTATION_HORIZONTAL)
 	controlsGrid.SetBorderWidth(5)
 
-	label, err := gtk.LabelNew("Solution #1")
+	label, err := gtk.LabelNew(getMessage(puzzle))
 	if err != nil {
 		log.Fatal("Unable to create label:", err)
 	}
@@ -65,7 +65,7 @@ func ShowSolutions(puzzle Puzzle) {
 	if err != nil {
 		log.Fatal("Unable to create button right:", err)
 	}
-	btnRight.SetSensitive(true)
+	btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
 
 	btnLeft.Connect("clicked", func() {
 		if index > 0 {
@@ -73,7 +73,7 @@ func ShowSolutions(puzzle Puzzle) {
 		}
 		btnLeft.SetSensitive(index > 0)
 		btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
-		label.SetText(fmt.Sprintf("Solution #%d", index+1))
+		label.SetText(getMessage(puzzle))
 		win.QueueDraw()
 	})
 
@@ -83,7 +83,7 @@ func ShowSolutions(puzzle Puzzle) {
 		}
 		btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
 		btnLeft.SetSensitive(index > 0)
-		label.SetText(fmt.Sprintf("Solution #%d", index+1))
+		label.SetText(getMessage(puzzle))
 		win.QueueDraw()
 	})
 
@@ -131,4 +131,8 @@ func ShowSolutions(puzzle Puzzle) {
 	win.ShowAll()
 
 	gtk.Main()
+}
+
+func getMessage(puzzle Puzzle) string {
+	return fmt.Sprintf("Solution #%d / %d", index+1, len(*puzzle.Solutions))
 }
