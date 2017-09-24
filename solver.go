@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gotk3/gotk3/gtk"
 	"time"
-	//"log"
 	"fmt"
 )
 
@@ -18,13 +17,13 @@ func solver(puzzle *Puzzle, win *gtk.Window) {
 		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
 	win.QueueDraw()
-	puzzle.StatusBar.Push(1, "Finished solving")
+	puzzle.StatusBar.Push(1, fmt.Sprintf("Finished solving. Found %d solutions.", len(*puzzle.Solutions)))
 }
 
-func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) bool {
+func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) {
 
 	if ! puzzle.Computing {
-		return false
+		return
 	}
 
 	puzzle.Grid = grid
@@ -32,35 +31,54 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	win.QueueDraw()
 	if len(remainingPieces) == 0 {
 		addSolution(puzzle.Solutions, grid, puzzle.StatusBar)
-		return true
+		return
 	}
 	minPieceSize := minPieceSize(remainingPieces)
 
-	// this loop is for starting placing an always different piece
-	for i := 0; i < len(remainingPieces); i++ {
-		for _, piece := range remainingPieces {
-			// consider all possible rotations of this piece
-			for _, rot := range piece.Rotations {
-				result, updatedGrid := placePiece(rot, grid, minPieceSize, piece.Number)
-				if result {
-					remainingPieces = removePieceFromRemaining(remainingPieces, piece)
-					result := solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
-					if !result {
-						updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
-						remainingPieces = append(remainingPieces, piece)
+	// loops over the remaining pieces
+	for _, piece := range remainingPieces {
+
+		// considers all possible rotations of this piece
+		for _, rot := range piece.Rotations {
+
+			// tries every cell of the grid
+			for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
+				for i := 0; i <= len(grid)-len(rot); i++ {
+
+					// if the cell is empty anf the piece doesn't overlap with other pieces
+					if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) {
+
+						// adds the piece to the grid
+						updatedGrid := addShapeToGrid(rot, i, j, grid, piece.Number)
+
+						// if the piece doesn't leave any unfillable cell
+						if !hasLeftUnfillableAreas(updatedGrid, minPieceSize) {
+
+							// updates the remaining pieces
+							remainingPieces, index = removePieceFromRemaining(remainingPieces, piece)
+
+							// recursively calls this function
+							solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
+
+							// after having tried, remove this piece and goes on
+							updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
+							//remainingPieces = append(remainingPieces, piece)
+							remainingPieces = append(remainingPieces[:index], append([]Piece{piece}, remainingPieces[index:]...)...)
+						}
 					}
-				} else {
-					return false
 				}
 			}
 		}
 	}
-	return false
 }
+
+// TODO
+// create a map with the placed pieces and positions, and check if the chosen configuraiton
+// has been already computed
 
 func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar) [][][]uint8 {
 	for sol := range *solutions {
-		if areEqualPieces((*solutions)[sol],solution) {
+		if areEqualPieces((*solutions)[sol], solution) {
 			return *solutions
 		}
 	}
@@ -69,33 +87,35 @@ func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statu
 	return *solutions
 }
 
-func removePieceFromRemaining(pieces []Piece, piece Piece) []Piece {
+func removePieceFromRemaining(pieces []Piece, piece Piece) ([]Piece, int) {
+
 	for i, v := range pieces {
 		if v.Number == piece.Number {
-			return append(pieces[:i], pieces[i+1:]...)
+			return append(pieces[:i], pieces[i+1:]...), i
 		}
 	}
-	return pieces
+	// FIXME maybe a log.panic?
+	return pieces, -1
 }
 
-// placePiece checks if is there room for this piece (or one of its rotations)
-// and if true add the piece to the grid, otherwise return false
-func placePiece(rot Shape, grid [][]uint8, minPieceSize int, number uint8) (bool, [][]uint8) {
+//// placePiece checks if is there room for this piece (or one of its rotations)
+//// and if true add the piece to the grid, otherwise return false
+//func placePiece(rot Shape, grid [][]uint8, minPieceSize int, number uint8) (bool, [][]uint8) {
+//
+//	// loops over all possible cells where to place this piece
+//	for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
+//		for i := 0; i <= len(grid)-len(rot); i++ {
+//			gridCopy := addShapeToGrid(rot, i, j, grid, number)
+//			if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(gridCopy, minPieceSize) {
+//				return true, gridCopy
+//			}
+//		}
+//	}
+//	return false, grid
+//}
 
-	// loops over all possible cells where to place this piece
-	for i := 0; i <= len(grid)-len(rot); i++ {
-		for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
-			if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) && !hasLeftUnfillableAreas(grid, rot, i, j, number, minPieceSize) {
-				return true, addShapeToGrid(rot, i, j, grid, number)
-			}
-		}
-	}
-	return false, grid
-}
-
-func hasLeftUnfillableAreas(grid [][]uint8, shape Shape, i, j int, number uint8, minPieceSize int) bool {
+func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
 	var gridCopy = copyGrid(grid)
-	gridCopy = addShapeToGrid(shape, i, j, gridCopy, number)
 	var min = 10000
 	for i := 0; i < len(gridCopy); i++ {
 		for j := 0; j < len(gridCopy[0]); j++ {
@@ -142,7 +162,6 @@ func pieceFits(shape Shape, dx, dy int, grid [][]uint8) bool {
 	return true
 }
 
-// addShapeToGrid writes
 func addShapeToGrid(shape Shape, dx, dy int, grid [][]uint8, number uint8) [][]uint8 {
 
 	updatedGrid := copyGrid(grid)

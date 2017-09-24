@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type Shape [][]uint8
 
 type Piece struct {
@@ -125,10 +129,11 @@ func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
 	return Piece{pieceGrid, pieceNumber, getRotations(pieceGrid), size}
 }
 
+// there's the piece itself, the three 90-degrees rotation of the piece plus the flipped
+// piece and its three 90-degrees rotation: 8 in total. Equal rotations are excluded in
+// case of some kind of symmetry
 func getRotations(piece Shape) []Shape {
 
-	// there's the piece itself, the 3 90-degrees rotation of the piece plus the flipped
-	// piece and its 3 90-degrees rotation: 8 in total
 	var rotations [8]Shape
 	rotations[0] = copyShape(piece)
 	var count = 1
@@ -206,3 +211,8 @@ func contains(values []uint8, value uint8) bool {
 	}
 	return false
 }
+
+func (piece Piece) String() string {
+	return fmt.Sprintf("%d", piece.Number)
+}
+
