@@ -2,24 +2,24 @@ package main
 
 import (
 	"log"
-	"os"
 	"path/filepath"
 	"github.com/gotk3/gotk3/gtk"
 	"time"
+	"flag"
 )
 
 func main() {
 
-	filename, err := filepath.Abs("github.com/shapes/models/5x5.model")
+	useGui := *flag.Bool("gui", true, "shows a GUI")
+	file := flag.String("filename", "", "the file containing the model")
+	flag.Parse()
+
+	filename, err := filepath.Abs(*file)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if len(os.Args) > 1 {
-		filename = os.Args[1]
-	}
-
-	useGui := true
+	useGui = false
 
 	if useGui {
 		CreateAndStartGui(filename)
