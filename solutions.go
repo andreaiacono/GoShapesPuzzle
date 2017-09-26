@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-var index int
+var solutionsIndex int
 
 func ShowSolutions(puzzle Puzzle) {
 
@@ -54,7 +54,7 @@ func ShowSolutions(puzzle Puzzle) {
 		log.Fatal("Unable to create label:", err)
 	}
 	label.SetMarginStart(10)
-	index = 0
+	solutionsIndex = 0
 	btnLeft, err := gtk.ButtonNewWithLabel("<")
 	if err != nil {
 		log.Fatal("Unable to create button left:", err)
@@ -65,24 +65,24 @@ func ShowSolutions(puzzle Puzzle) {
 	if err != nil {
 		log.Fatal("Unable to create button right:", err)
 	}
-	btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
+	btnRight.SetSensitive(solutionsIndex < len(*puzzle.Solutions)-1)
 
 	btnLeft.Connect("clicked", func() {
-		if index > 0 {
-			index --
+		if solutionsIndex > 0 {
+			solutionsIndex --
 		}
-		btnLeft.SetSensitive(index > 0)
-		btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
+		btnLeft.SetSensitive(solutionsIndex > 0)
+		btnRight.SetSensitive(solutionsIndex < len(*puzzle.Solutions)-1)
 		label.SetText(getMessage(puzzle))
 		win.QueueDraw()
 	})
 
 	btnRight.Connect("clicked", func() {
-		if index < len(*puzzle.Solutions)-1 {
-			index ++
+		if solutionsIndex < len(*puzzle.Solutions)-1 {
+			solutionsIndex ++
 		}
-		btnRight.SetSensitive(index < len(*puzzle.Solutions)-1)
-		btnLeft.SetSensitive(index > 0)
+		btnRight.SetSensitive(solutionsIndex < len(*puzzle.Solutions)-1)
+		btnLeft.SetSensitive(solutionsIndex > 0)
 		label.SetText(getMessage(puzzle))
 		win.QueueDraw()
 	})
@@ -116,7 +116,7 @@ func ShowSolutions(puzzle Puzzle) {
 
 		// draws the gtkGrid
 		if len(*puzzle.Solutions) > 0 {
-			drawGrid(puzzle, (*puzzle.Solutions)[index], cellSize, cr)
+			drawGrid(puzzle, (*puzzle.Solutions)[solutionsIndex], cellSize, cr)
 		} else {
 			label.SetText("No solutions found yet")
 		}
@@ -134,5 +134,5 @@ func ShowSolutions(puzzle Puzzle) {
 }
 
 func getMessage(puzzle Puzzle) string {
-	return fmt.Sprintf("Solution #%d / %d", index+1, len(*puzzle.Solutions))
+	return fmt.Sprintf("Solution #%d / %d", solutionsIndex+1, len(*puzzle.Solutions))
 }

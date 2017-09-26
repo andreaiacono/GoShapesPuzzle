@@ -7,6 +7,9 @@ import (
 	"log"
 )
 
+// this map contains a string representation of the
+var visited = map[string]bool {}
+
 // solves the puzzle
 func Solver(puzzle *Puzzle, win *gtk.Window) {
 
@@ -60,18 +63,22 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 						// adds the piece to the grid
 						updatedGrid := addShapeToGrid(rot, i, j, grid, piece.Number)
 
+						// checks for already visited states
+						if isStateAlreadyVisited(updatedGrid) {
+							continue
+						}
+
 						// if the piece doesn't leave any unfillable cell
 						if !hasLeftUnfillableAreas(updatedGrid, minPieceSize) {
 
 							// updates the remaining pieces
-							remainingPieces, index = removePieceFromRemaining(remainingPieces, piece)
+							index, remainingPieces := removePieceFromRemaining(remainingPieces, piece)
 
 							// recursively calls this function
 							solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
 
 							// after having tried, remove this piece and goes on
 							updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
-							//remainingPieces = append(remainingPieces, piece)
 							remainingPieces = append(remainingPieces[:index], append([]Piece{piece}, remainingPieces[index:]...)...)
 						}
 					}
@@ -81,9 +88,27 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 	}
 }
 
-// TODO
-// create a map with the placed pieces and positions, and check if the chosen configuraiton
-// has been already computed
+func isStateAlreadyVisited(grid [][]uint8) bool {
+
+	gridString := getGridString(grid)
+	_, isPresent := visited[gridString]
+
+	if !isPresent {
+		visited[gridString] = true
+	}
+	return isPresent
+}
+
+func getGridString(grid [][]uint8) string {
+
+	gridString := ""
+	for i := 0; i < len(grid); i++ {
+		for j := 0; j < len(grid[0]); j++ {
+			gridString += string(grid[i][j])
+		}
+	}
+	return gridString
+}
 
 func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar, useGui bool) [][][]uint8 {
 
@@ -102,15 +127,16 @@ func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statu
 	return *solutions
 }
 
-func removePieceFromRemaining(pieces []Piece, piece Piece) ([]Piece, int) {
+func removePieceFromRemaining(pieces []Piece, piece Piece) (int, []Piece) {
 
 	for i, v := range pieces {
 		if v.Number == piece.Number {
-			return append(pieces[:i], pieces[i+1:]...), i
+			return i, append(pieces[:i], pieces[i+1:]...)
 		}
 	}
-	// FIXME maybe a log.panic?
-	return pieces, -1
+
+	log.Fatal("Trying to remove a not found piece from remaining ones.")
+	return -1, pieces
 }
 
 func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
@@ -141,7 +167,7 @@ func getAreaSize(grid *[][]uint8, x, y int) int {
 	if x > 0 && (*grid)[x-1][y] == EMPTY {
 		size += getAreaSize(grid, x-1, y)
 	}
-	if x < len((*grid))-1 && (*grid)[x+1][y] == EMPTY {
+	if x < len(*grid)-1 && (*grid)[x+1][y] == EMPTY {
 		size += getAreaSize(grid, x+1, y)
 	}
 	if y < len((*grid)[0])-1 && (*grid)[x][y+1] == EMPTY {
