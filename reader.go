@@ -29,12 +29,12 @@ func ReadFile(filename string, statusBar gtk.Statusbar, useGui bool) (Puzzle, er
 				continue
 			}
 			counter ++
-			if val >= 48 && val <= 57 {
+			if val > 48 && val <= 57 {
 				rowValues = append(rowValues, uint8(val-48))
 			} else if val >= 65 && val <= 90 {
 				rowValues = append(rowValues, uint8(val-55))
 			} else {
-				return Puzzle{}, errors.New("only numbers and characters allowed in model")
+				return Puzzle{}, errors.New("only numbers [1-9] and latin characters allowed in model")
 			}
 		}
 		if maxLen < counter {
