@@ -4,7 +4,6 @@ import (
 	"log"
 	"path/filepath"
 	"github.com/gotk3/gotk3/gtk"
-	"time"
 	"flag"
 )
 
@@ -19,8 +18,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	useGui = false
-
 	if useGui {
 		CreateAndStartGui(filename)
 	} else {
@@ -30,14 +27,6 @@ func main() {
 			log.Fatal(err)
 		}
 		log.Println("Started solving...")
-		defer elapsed()()
 		Solver(&puzzle, nil)
-	}
-}
-
-func elapsed() func() {
-	start := time.Now()
-	return func() {
-		log.Printf("Execution time: %v\n", time.Since(start))
 	}
 }

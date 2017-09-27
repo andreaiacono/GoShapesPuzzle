@@ -15,18 +15,29 @@ func Solver(puzzle *Puzzle, win *gtk.Window) {
 
 	grid := createEmptyGrid(puzzle.Grid)
 	puzzle.Grid = grid
+	defer elapsed(*puzzle, win)()
 
 	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win)
 	if len(*puzzle.Solutions) > 0 {
 		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
-	message := fmt.Sprintf("Finished solving. Found %d solutions.", len(*puzzle.Solutions))
-	if puzzle.UseGui {
-		win.QueueDraw()
-		puzzle.StatusBar.Push(1, message)
-	} else {
-		log.Println(message)
+}
+
+func elapsed(puzzle Puzzle, win *gtk.Window) func() {
+	start := time.Now()
+
+	return func() {
+		message := fmt.Sprintf("Found %d solutions in %v.", len(*puzzle.Solutions), RoundedSince(start))
+		if puzzle.UseGui {
+			puzzle.StatusBar.Push(1, message)
+		} else {
+			log.Println(message)
+		}
 	}
+}
+
+func RoundedSince(value time.Time) time.Duration {
+	return time.Duration(time.Since(value)/time.Millisecond)*time.Millisecond
 }
 
 // the recursive solving function
