@@ -1,28 +1,27 @@
 package main
 
 import (
-	"math/rand"
 	"github.com/gotk3/gotk3/gtk"
 )
 
+// represents a puzzle
 type Puzzle struct {
 	Pieces       []Piece
-	Grid         [][]uint8
+	OriginalGrid [][]uint8
+	Grid		 [][]uint8
 	MaxPieceSide int8
-	Speed        uint
-	Computing    bool
 	MinPieceSize int
-	DrawNumbers  bool
-	StatusBar    gtk.Statusbar
-	Solutions	 *[][][]uint8
-	UseGui		 bool
+	Solutions    *[][][]uint8
+	IsRunning    bool
+	HasGui       bool
+	WinInfo      *WinInfo
 }
 
-func (puzzle *Puzzle) ShufflePieces() {
-	shuffledPieces := make([]Piece, len(puzzle.Pieces))
-	perm := rand.Perm(len(puzzle.Pieces))
-	for i, v := range perm {
-		shuffledPieces[v] = puzzle.Pieces[i]
-	}
-	puzzle.Pieces = shuffledPieces
+// represent the info needed for displaying the puzzle in a GUI
+type WinInfo struct {
+	MainWindow  *gtk.Window
+	StatusBar   gtk.Statusbar
+	SolveButton gtk.Button
+	Speed       uint
+	DrawNumbers bool
 }

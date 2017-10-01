@@ -4,10 +4,9 @@ import (
 	"io/ioutil"
 	"strings"
 	"errors"
-	"github.com/gotk3/gotk3/gtk"
 )
 
-func ReadFile(filename string, statusBar gtk.Statusbar, useGui bool) (Puzzle, error) {
+func ReadFile(filename string) (Puzzle, error) {
 
 	dat, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -46,19 +45,17 @@ func ReadFile(filename string, statusBar gtk.Statusbar, useGui bool) (Puzzle, er
 	pieces := GetPiecesFromGrid(grid)
 	var solutions [][][]uint8
 
-
 	var puzzle = Puzzle{
 		pieces,
+		copyGrid(grid[:]),
 		grid[:],
 		max(int8(len(rows)), maxLen),
-		StartingSpeed,
-		false,
 		minPieceSize(pieces),
-		false,
-		statusBar,
 		&solutions,
-		useGui,
-		}
+		false,
+		false,
+		&WinInfo{},
+	}
 
 	return puzzle, nil
 }

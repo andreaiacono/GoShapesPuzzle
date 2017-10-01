@@ -11,49 +11,36 @@ import (
 var visited = map[string]bool {}
 
 // solves the puzzle
-func Solver(puzzle *Puzzle, win *gtk.Window) {
+func Solver(puzzle *Puzzle) {
 
-	grid := createEmptyGrid(puzzle.Grid)
-	puzzle.Grid = grid
-	defer elapsed(*puzzle, win)()
+	puzzle.Grid = createEmptyGrid(puzzle.Grid)
+	defer elapsed(*puzzle)()
 
-	solvePuzzle(puzzle.Grid, puzzle.Pieces, puzzle, win)
+	solvePuzzle(puzzle, puzzle.Pieces)
 	if len(*puzzle.Solutions) > 0 {
 		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
-}
 
-func elapsed(puzzle Puzzle, win *gtk.Window) func() {
-	start := time.Now()
-
-	return func() {
-		message := fmt.Sprintf("Found %d solutions in %v.", len(*puzzle.Solutions), RoundedSince(start))
-		if puzzle.UseGui {
-			puzzle.StatusBar.Push(1, message)
-		} else {
-			log.Println(message)
-		}
+	puzzle.IsRunning = false
+	if puzzle.HasGui {
+		puzzle.WinInfo.SolveButton.SetLabel("Find solutions")
 	}
-}
-
-func RoundedSince(value time.Time) time.Duration {
-	return time.Duration(time.Since(value)/time.Millisecond)*time.Millisecond
 }
 
 // the recursive solving function
-func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *gtk.Window) {
+func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 
-	if ! puzzle.Computing {
+	if ! puzzle.IsRunning {
 		return
 	}
 
-	puzzle.Grid = grid
-	if puzzle.UseGui {
-		time.Sleep(time.Duration(puzzle.Speed) * time.Millisecond)
-		win.QueueDraw()
+	if puzzle.HasGui {
+		time.Sleep(time.Duration(puzzle.WinInfo.Speed) * time.Millisecond)
+		puzzle.WinInfo.MainWindow.QueueDraw()
 	}
+
 	if len(remainingPieces) == 0 {
-		addSolution(puzzle.Solutions, grid, puzzle.StatusBar, puzzle.UseGui)
+		addSolution(puzzle.Solutions, puzzle.Grid, puzzle.WinInfo.StatusBar, puzzle.HasGui)
 		return
 	}
 	minPieceSize := minPieceSize(remainingPieces)
@@ -65,14 +52,14 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 		for _, rot := range piece.Rotations {
 
 			// tries every cell of the grid
-			for j := 0; j <= len(grid[0])-len(rot[0]); j++ {
-				for i := 0; i <= len(grid)-len(rot); i++ {
+			for j := 0; j <= len(puzzle.Grid[0])-len(rot[0]); j++ {
+				for i := 0; i <= len(puzzle.Grid)-len(rot); i++ {
 
 					// if the cell is empty anf the piece doesn't overlap with other pieces
-					if grid[i][j] == EMPTY && pieceFits(rot, i, j, grid) {
+					if puzzle.Grid[i][j] == EMPTY && pieceFits(rot, i, j, puzzle.Grid) {
 
 						// adds the piece to the grid
-						updatedGrid := addShapeToGrid(rot, i, j, grid, piece.Number)
+						updatedGrid := addShapeToGrid(rot, i, j, puzzle.Grid, piece.Number)
 
 						// checks for already visited states
 						if isStateAlreadyVisited(updatedGrid) {
@@ -86,10 +73,12 @@ func solvePuzzle(grid [][]uint8, remainingPieces []Piece, puzzle *Puzzle, win *g
 							index, remainingPieces := removePieceFromRemaining(remainingPieces, piece)
 
 							// recursively calls this function
-							solvePuzzle(updatedGrid, remainingPieces, puzzle, win)
+							puzzle.Grid = updatedGrid
+							solvePuzzle(puzzle, remainingPieces)
 
 							// after having tried, remove this piece and goes on
 							updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
+							puzzle.Grid = updatedGrid
 							remainingPieces = append(remainingPieces[:index], append([]Piece{piece}, remainingPieces[index:]...)...)
 						}
 					}
@@ -223,6 +212,23 @@ func removeShapeFromGrid(grid [][]uint8, number uint8) [][]uint8 {
 		}
 	}
 	return updatedGrid
+}
+
+func elapsed(puzzle Puzzle) func() {
+	start := time.Now()
+
+	return func() {
+		message := fmt.Sprintf("Found %d solutions in %v.", len(*puzzle.Solutions), RoundedSince(start))
+		if puzzle.HasGui {
+			puzzle.WinInfo.StatusBar.Push(1, message)
+		} else {
+			log.Println(message)
+		}
+	}
+}
+
+func RoundedSince(value time.Time) time.Duration {
+	return time.Duration(time.Since(value)/time.Millisecond)*time.Millisecond
 }
 
 func createEmptyGrid(grid [][]uint8) [][]uint8 {

@@ -11,13 +11,13 @@ import (
 var filename string
 var grey = Color{0.2, 0.2, 0.2}
 
-func openFile(statusBar gtk.Statusbar) (Puzzle, error) {
+func openFile() (Puzzle, error) {
 
 	filename = getFilenameFromUser()
 
 	var puzzle Puzzle
 	if filename != "" {
-		puzzle, err := ReadFile(filename, statusBar, true)
+		puzzle, err := ReadFile(filename)
 		if err != nil {
 			return puzzle, err
 		}
@@ -68,7 +68,7 @@ func drawGrid(puzzle Puzzle, grid [][]uint8, cellSize float64, cr *cairo.Context
 		for j = 0; j < len(grid[0]); j++ {
 			if grid[i][j] > 0 {
 				var number = ""
-				if puzzle.DrawNumbers {
+				if puzzle.WinInfo.DrawNumbers {
 					number = strconv.Itoa(int(grid[i][j]))
 				}
 				drawCell(j, i, cellSize, colors[grid[i][j]-1], cr, number)
@@ -97,11 +97,11 @@ func setColor(color Color, context *cairo.Context) {
 	context.SetSourceRGB(color.R, color.G, color.B)
 }
 
-func CreateAndStartGui(filename string) {
+func CreateAndStartGui(filename string, puzzle Puzzle) {
 
+	puzzle.HasGui = true
 	gtk.Init(nil)
 
-	isSolving := false
 	cellSize := float64(150)
 
 	win, err := gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
@@ -150,6 +150,11 @@ func CreateAndStartGui(filename string) {
 	scale.SetHExpand(true)
 	scale.SetDrawValue(false)
 
+	solveButton, err := gtk.ButtonNewWithLabel("Find new solution")
+	if err != nil {
+		log.Fatal("Unable to create button:", err)
+	}
+
 	statusBar, err := gtk.StatusbarNew()
 	if err != nil {
 		log.Fatal("Unable to create statusbar:", err)
@@ -160,37 +165,33 @@ func CreateAndStartGui(filename string) {
 	statusBar.SetMarginStart(0)
 	statusBar.Push(1, "Ready")
 
-	puzzle, err := ReadFile(filename, *statusBar, true)
-	if err != nil {
-		log.Fatal(err)
-	}
+	winInfo := WinInfo{win, *statusBar, *solveButton,  StartingSpeed, false}
+	puzzle.WinInfo = &winInfo
 
 	scale.Connect("value-changed", func() {
-		puzzle.Speed = uint(adj.GetUpper() - scale.GetValue())
+		winInfo.Speed = uint(adj.GetUpper() - scale.GetValue())
 	})
-
-	btn, err := gtk.ButtonNewWithLabel("Find new solution")
-	if err != nil {
-		log.Fatal("Unable to create button:", err)
-	}
 
 	infoLabel, err := gtk.LabelNew("   Speed")
 	if err != nil {
 		log.Fatal("Unable to create label:", err)
 	}
 
-	btn.Connect("clicked", func() {
-		if isSolving == false {
-			btn.SetLabel("     Stop Finding     ")
-			puzzle.Computing = true
-			puzzle.StatusBar.Push(1, "Solving...")
-			go Solver(&puzzle, win)
+	solveButton.Connect("clicked", func() {
+		if puzzle.IsRunning == false {
+			solveButton.SetLabel("Stop Finding")
+			puzzle.IsRunning = true
+			var solutions [][][]uint8
+			puzzle.Solutions = &solutions
+			puzzle.Pieces = GetPiecesFromGrid(puzzle.OriginalGrid)
+			puzzle.WinInfo.StatusBar.Push(1, "Solving...")
+			log.Printf("solving with gird: %v, rem:%v", puzzle.Grid, puzzle.Pieces)
+			go Solver(&puzzle)
 		} else {
-			btn.SetLabel("Find new solution")
-			puzzle.Computing = false
-			ReadFile(filename, puzzle.StatusBar, true)
+			solveButton.SetLabel("Find solutions")
+			puzzle.IsRunning = false
+			ReadFile(filename)
 		}
-		isSolving = !isSolving
 	})
 
 	da.SetHExpand(true)
@@ -201,8 +202,8 @@ func CreateAndStartGui(filename string) {
 		windowHeight := float64(da.GetAllocatedHeight())
 		windowRatio := windowWidth / windowHeight
 
-		puzzleWidth := float64(len(puzzle.Grid[0]))
-		puzzleHeight := float64(len(puzzle.Grid))
+		puzzleWidth := float64(len(puzzle.OriginalGrid[0]))
+		puzzleHeight := float64(len(puzzle.OriginalGrid))
 		puzzleRatio := puzzleWidth / puzzleHeight
 
 		if windowRatio > puzzleRatio {
@@ -246,13 +247,15 @@ func CreateAndStartGui(filename string) {
 	}
 
 	openMenuItem.Connect("activate", func() {
-		newPuzzle, err := openFile(puzzle.StatusBar)
+		newPuzzle, err := openFile()
 		if err != nil {
 			log.Print(err)
 			return
 		}
 
 		puzzle = newPuzzle
+		puzzle.HasGui = true
+		puzzle.WinInfo = &winInfo
 	})
 
 	fileMenuItem.SetSubmenu(fileMenu)
@@ -285,7 +288,7 @@ func CreateAndStartGui(filename string) {
 	gtkGrid.Attach(menuBar, 0, 0, 200, 200)
 
 	gtkGrid.Add(da)
-	controlsGrid.Add(btn)
+	controlsGrid.Add(solveButton)
 	controlsGrid.Add(infoLabel)
 	controlsGrid.Add(scale)
 	gtkGrid.Add(controlsGrid)

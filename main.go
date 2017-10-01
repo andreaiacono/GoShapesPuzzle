@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"path/filepath"
-	"github.com/gotk3/gotk3/gtk"
 	"flag"
 )
 
@@ -18,15 +17,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// reads the puzzle
+	puzzle, err := ReadFile(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//useGui = false
+	//filename, err = filepath.Abs("github.com/shapes/models/6x6.model")
+
 	if useGui {
-		CreateAndStartGui(filename)
+		CreateAndStartGui(filename, puzzle)
 	} else {
-		puzzle, err := ReadFile(filename, gtk.Statusbar{}, false)
-		puzzle.Computing = true
-		if err != nil {
-			log.Fatal(err)
-		}
+		puzzle.IsRunning = true
 		log.Println("Started solving...")
-		Solver(&puzzle, nil)
+		Solver(&puzzle)
 	}
 }
