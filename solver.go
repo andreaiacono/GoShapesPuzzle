@@ -8,7 +8,9 @@ import (
 )
 
 // this map contains a string representation of the
-var visited = map[string]bool {}
+var visited = map[string]bool{}
+var totalStates float64
+var actualStates float64
 
 // solves the puzzle
 func Solver(puzzle *Puzzle) {
@@ -16,14 +18,21 @@ func Solver(puzzle *Puzzle) {
 	puzzle.Grid = createEmptyGrid(puzzle.Grid)
 	defer elapsed(*puzzle)()
 
+	area := len(puzzle.Grid) * len(puzzle.Grid[0])
+	totalStates = float64(area)
+	for i:=1; i< len(puzzle.Grid); i++ {
+		totalStates *= float64(6 * area - i)
+	}
+	totalStates /= 200.0
+	actualStates = 0.0
 	solvePuzzle(puzzle, puzzle.Pieces)
 	if len(*puzzle.Solutions) > 0 {
 		puzzle.Grid = (*puzzle.Solutions)[0]
 	}
-
 	puzzle.IsRunning = false
 	if puzzle.HasGui {
 		puzzle.WinInfo.SolveButton.SetLabel("Find solutions")
+		puzzle.WinInfo.ProgressBar.SetFraction(1)
 	}
 }
 
@@ -36,6 +45,7 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 
 	if puzzle.HasGui {
 		time.Sleep(time.Duration(puzzle.WinInfo.Speed) * time.Millisecond)
+		puzzle.WinInfo.ProgressBar.SetFraction(actualStates / totalStates)
 		puzzle.WinInfo.MainWindow.QueueDraw()
 	}
 
@@ -54,6 +64,8 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 			// tries every cell of the grid
 			for j := 0; j <= len(puzzle.Grid[0])-len(rot[0]); j++ {
 				for i := 0; i <= len(puzzle.Grid)-len(rot); i++ {
+
+					actualStates ++
 
 					// if the cell is empty anf the piece doesn't overlap with other pieces
 					if puzzle.Grid[i][j] == EMPTY && pieceFits(rot, i, j, puzzle.Grid) {
@@ -122,7 +134,7 @@ func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statu
 	if useGui {
 		statusBar.Push(1, fmt.Sprintf("Found %d solutions", len(*solutions)))
 	} else {
-		log.Printf("Solution #%d: %v",  len(*solutions), solution)
+		log.Printf("Solution #%d: %v", len(*solutions), solution)
 	}
 	return *solutions
 }
@@ -228,7 +240,7 @@ func elapsed(puzzle Puzzle) func() {
 }
 
 func RoundedSince(value time.Time) time.Duration {
-	return time.Duration(time.Since(value)/time.Millisecond)*time.Millisecond
+	return time.Duration(time.Since(value)/time.Millisecond) * time.Millisecond
 }
 
 func createEmptyGrid(grid [][]uint8) [][]uint8 {
@@ -251,4 +263,13 @@ func copyGrid(grid [][]uint8) [][]uint8 {
 		}
 	}
 	return copiedGrid
+}
+
+func Factorial(n uint64) uint64 {
+	var result uint64 = 1
+	var i uint64
+	for i=2; i<=n; i++ {
+		result *= i
+	}
+	return result
 }
