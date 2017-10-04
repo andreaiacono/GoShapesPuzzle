@@ -23,7 +23,7 @@ func openFile() (Puzzle, error) {
 		}
 		return puzzle, nil
 	}
-	return puzzle, errors.New("user canceled action")
+	return puzzle, errors.New("User canceled action.")
 }
 
 func getFilenameFromUser() string {
@@ -199,7 +199,6 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 			puzzle.Solutions = &solutions
 			puzzle.Pieces = GetPiecesFromGrid(puzzle.OriginalGrid)
 			puzzle.WinInfo.StatusBar.Push(1, "Solving...")
-			log.Printf("solving with gird: %v, rem:%v", puzzle.Grid, puzzle.Pieces)
 			go Solver(&puzzle)
 		} else {
 			solveButton.SetLabel("Find solutions")
@@ -263,7 +262,12 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 	openMenuItem.Connect("activate", func() {
 		newPuzzle, err := openFile()
 		if err != nil {
-			log.Print(err)
+			dialog := gtk.MessageDialogNew(win, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR, gtk.BUTTONS_CLOSE, "An error has occurred opening the model: %s", err.Error())
+			dialog.SetModal(true)
+			dialog.Connect("response",  func() {
+				dialog.Destroy()
+			})
+			dialog.Show()
 			return
 		}
 

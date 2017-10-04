@@ -3,7 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"strings"
-	"errors"
+	"fmt"
 )
 
 func ReadFile(filename string) (Puzzle, error) {
@@ -33,7 +33,7 @@ func ReadFile(filename string) (Puzzle, error) {
 			} else if val >= 65 && val <= 90 {
 				rowValues = append(rowValues, uint8(val-55))
 			} else {
-				return Puzzle{}, errors.New("only numbers [1-9] and latin characters allowed in model")
+				return Puzzle{}, fmt.Errorf("only numbers [1-9] and latin characters allowed in model. Loaded model [%s].", filename)
 			}
 		}
 		if maxLen < counter {
