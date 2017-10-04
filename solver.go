@@ -15,15 +15,24 @@ var actualStates float64
 // solves the puzzle
 func Solver(puzzle *Puzzle) {
 
-	puzzle.Grid = createEmptyGrid(puzzle.Grid)
+	puzzle.Grid = createEmptyGrid(puzzle.OriginalGrid)
 	defer elapsed(*puzzle)()
 
-	area := len(puzzle.Grid) * len(puzzle.Grid[0])
-	totalStates = float64(area)
-	for i:=1; i< len(puzzle.Grid); i++ {
-		totalStates *= float64(6 * area - i)
+	visited = map[string]bool{}
+	rotations := 0.0
+	size :=0.0
+	for _, piece := range puzzle.Pieces {
+		rotations += float64(len(piece.Rotations))
+		size += float64(piece.Size)
 	}
-	totalStates /= 200.0
+	size /= float64(len(puzzle.Pieces))
+	rotations /= float64(len(puzzle.Pieces))
+	area := len(puzzle.Grid) * len(puzzle.Grid[0])
+	totalStates = 1
+	for i:=0; i< len(puzzle.Grid); i++ {
+		totalStates *= float64((rotations-float64(i)*(rotations/float64(len(puzzle.Pieces)))) * (float64(area) - float64(i)*size))
+	}
+	totalStates /= 11.0
 	actualStates = 0.0
 	solvePuzzle(puzzle, puzzle.Pieces)
 	if len(*puzzle.Solutions) > 0 {
