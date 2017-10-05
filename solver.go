@@ -111,24 +111,13 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 
 func isStateAlreadyVisited(grid [][]uint8) bool {
 
-	gridString := getGridString(grid)
+	gridString := fmt.Sprintf("%s", grid)
 	_, isPresent := visited[gridString]
 
 	if !isPresent {
 		visited[gridString] = true
 	}
 	return isPresent
-}
-
-func getGridString(grid [][]uint8) string {
-
-	gridString := ""
-	for i := 0; i < len(grid); i++ {
-		for j := 0; j < len(grid[0]); j++ {
-			gridString += string(grid[i][j])
-		}
-	}
-	return gridString
 }
 
 func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar, useGui bool) [][][]uint8 {
