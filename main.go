@@ -8,26 +8,23 @@ import (
 
 func main() {
 
-	useGui := *flag.Bool("gui", true, "shows a GUI")
-	file := flag.String("filename", "", "the file containing the model")
+	useGui := flag.Bool("gui", false, "shows a GUI")
+	filename := flag.String("filename", "github.com/shapes/models/5x5.model", "the file containing the model")
 	flag.Parse()
 
-	filename, err := filepath.Abs(*file)
+	file, err := filepath.Abs(*filename)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// reads the puzzle
-	puzzle, err := ReadFile(filename)
+	puzzle, err := ReadFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//useGui = false
-	//filename, err = filepath.Abs("github.com/shapes/models/6x6.model")
-
-	if useGui {
-		CreateAndStartGui(filename, puzzle)
+	if *useGui {
+		CreateAndStartGui(file, puzzle)
 	} else {
 		puzzle.IsRunning = true
 		log.Println("Started solving...")
