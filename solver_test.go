@@ -91,3 +91,34 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 	}
 
 }
+
+func TestComputesCorrectSolutions(t *testing.T) {
+
+	var grid = [][]uint8{
+		{1, 2, 2, 2},
+		{1, 1, 4, 4},
+		{1, 1, 4, 4},
+		{3, 3, 3, 3},
+	}
+
+	pieces := GetPiecesFromGrid(grid)
+	var solutions [][][]uint8
+
+	var puzzle = Puzzle{
+		pieces,
+		copyGrid(grid[:]),
+		grid[:],
+		4,
+		minPieceSize(pieces),
+		&solutions,
+		true,
+		false,
+		&WinInfo{},
+	}
+
+	Solver(&puzzle)
+
+	if len(solutions) != 16 {
+		t.Errorf("Solver must find 16 solutions")
+	}
+}
