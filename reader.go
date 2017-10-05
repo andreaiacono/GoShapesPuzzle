@@ -13,7 +13,12 @@ func ReadFile(filename string) (Puzzle, error) {
 		return Puzzle{}, err
 	}
 
-	rows := strings.Split(strings.Trim(strings.ToUpper(string(dat[:])), " \t\n\r"), "\n")
+	return createPuzzle(string(dat[:]))
+}
+
+func createPuzzle(model string) (Puzzle, error) {
+
+	rows := strings.Split(strings.Trim(strings.ToUpper(model), " \t\n\r"), "\n")
 	var maxLen int8 = 0
 	var grid = make([][]uint8, len(rows), len(rows[0]))
 	for index, row := range rows {
