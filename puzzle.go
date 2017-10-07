@@ -26,7 +26,6 @@ type WinInfo struct {
 	MainWindow  *gtk.Window
 	StatusBar   gtk.Statusbar
 	SolveButton gtk.Button
-	ProgressBar gtk.ProgressBar
 	Speed       uint
 	DrawNumbers bool
 }

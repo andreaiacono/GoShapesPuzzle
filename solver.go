@@ -5,6 +5,7 @@ import (
 	"time"
 	"fmt"
 	"log"
+	"math"
 )
 
 // this map contains a string representation of the
@@ -19,21 +20,7 @@ func Solver(puzzle *Puzzle) {
 	defer elapsed(*puzzle)()
 
 	visited = map[string]bool{}
-	rotations := 0.0
-	size :=0.0
-	for _, piece := range puzzle.Pieces {
-		rotations += float64(len(piece.Rotations))
-		size += float64(piece.Size)
-	}
-	size /= float64(len(puzzle.Pieces))
-	rotations /= float64(len(puzzle.Pieces))
-	area := len(puzzle.WorkingGrid) * len(puzzle.WorkingGrid[0])
-	totalStates = 1
-	for i:=0; i< len(puzzle.WorkingGrid); i++ {
-		totalStates *= float64((rotations-float64(i)*(rotations/float64(len(puzzle.Pieces)))) * (float64(area) - float64(i)*size))
-	}
-	totalStates /= 11.0
-	actualStates = 0.0
+
 	solvePuzzle(puzzle, puzzle.Pieces)
 	if len(*puzzle.Solutions) > 0 {
 		puzzle.WorkingGrid = (*puzzle.Solutions)[0]
@@ -41,7 +28,6 @@ func Solver(puzzle *Puzzle) {
 	puzzle.IsRunning = false
 	if puzzle.HasGui {
 		puzzle.WinInfo.SolveButton.SetLabel("Find solutions")
-		puzzle.WinInfo.ProgressBar.SetFraction(1)
 	}
 }
 
@@ -54,7 +40,6 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 
 	if puzzle.HasGui {
 		time.Sleep(time.Duration(puzzle.WinInfo.Speed) * time.Millisecond)
-		puzzle.WinInfo.ProgressBar.SetFraction(actualStates / totalStates)
 		puzzle.WinInfo.MainWindow.QueueDraw()
 	}
 
@@ -153,7 +138,7 @@ func removePieceFromRemaining(pieces []Piece, piece Piece) (int, []Piece) {
 func hasLeftUnfillableAreas(grid Grid, minPieceSize int) bool {
 
 	var gridCopy = copyGrid(grid)
-	var min = 10000
+	var min = math.MaxInt32
 	for i := 0; i < len(gridCopy); i++ {
 		for j := 0; j < len(gridCopy[0]); j++ {
 			if gridCopy[i][j] == EMPTY {

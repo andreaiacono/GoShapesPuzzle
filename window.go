@@ -170,14 +170,7 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 	statusBar.SetMarginStart(0)
 	statusBar.Push(1, "Ready")
 
-	progressBar, err := gtk.ProgressBarNew()
-	if err != nil {
-		log.Fatal("Unable to create progress bar:", err)
-	}
-	progressBar.SetHExpand(true)
-	progressBar.SetMarginBottom(8)
-
-	winInfo := WinInfo{win, *statusBar, *solveButton,  *progressBar, StartingSpeed, false}
+	winInfo := WinInfo{win, *statusBar, *solveButton,  StartingSpeed, false}
 	puzzle.WinInfo = &winInfo
 
 	scale.Connect("value-changed", func() {
@@ -272,7 +265,6 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 		puzzle = newPuzzle
 		puzzle.HasGui = true
 		puzzle.WinInfo = &winInfo
-		progressBar.SetFraction(0.0)
 		solveButton.SetLabel("Find solutions")
 		statusBar.Push(1, "Ready")
 	})
@@ -312,9 +304,7 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 	controlsGrid.Add(scale)
 	gtkGrid.Add(controlsGrid)
 
-	gtkGrid.AttachNextTo(progressBar, statusBar, gtk.POS_RIGHT, 1, 1)
 	statusGrid.Add(statusBar)
-	statusGrid.Add(progressBar)
 	gtkGrid.Add(statusGrid)
 	win.Add(gtkGrid)
 	win.ShowAll()
