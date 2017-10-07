@@ -30,5 +30,5 @@ This is the command to launch it on command line with the `4x4.model`:
 This repo contains some models of the puzzles. If you want to solve a new one, just create a new `.model` file; the format is simply the disposition of the pieces where every piece is specified by a number (greater then 0) or a letter. So, the puzzle can have a maximum of 35 pieces (26 case unsensitive letter and 9 numbers).
 
 ## More info
-The application uses a basic backtracking algorithm to find the solutions with some branch cutting for improving performances. There's a complete explanation of the internals here: https://medium.com/p/7450d6ef9e1a .
+The application uses a basic backtracking algorithm to find the solutions with some branch cutting for improving performances. There's a complete explanation of the internals here: https://medium.com/@andreaiacono/backtracking-explained-7450d6ef9e1a
 
