@@ -15,7 +15,7 @@ var actualStates float64
 // solves the puzzle
 func Solver(puzzle *Puzzle) {
 
-	puzzle.Grid = createEmptyGrid(puzzle.OriginalGrid)
+	puzzle.WorkingGrid = createEmptyGrid(puzzle.OriginalGrid)
 	defer elapsed(*puzzle)()
 
 	visited = map[string]bool{}
@@ -27,16 +27,16 @@ func Solver(puzzle *Puzzle) {
 	}
 	size /= float64(len(puzzle.Pieces))
 	rotations /= float64(len(puzzle.Pieces))
-	area := len(puzzle.Grid) * len(puzzle.Grid[0])
+	area := len(puzzle.WorkingGrid) * len(puzzle.WorkingGrid[0])
 	totalStates = 1
-	for i:=0; i< len(puzzle.Grid); i++ {
+	for i:=0; i< len(puzzle.WorkingGrid); i++ {
 		totalStates *= float64((rotations-float64(i)*(rotations/float64(len(puzzle.Pieces)))) * (float64(area) - float64(i)*size))
 	}
 	totalStates /= 11.0
 	actualStates = 0.0
 	solvePuzzle(puzzle, puzzle.Pieces)
 	if len(*puzzle.Solutions) > 0 {
-		puzzle.Grid = (*puzzle.Solutions)[0]
+		puzzle.WorkingGrid = (*puzzle.Solutions)[0]
 	}
 	puzzle.IsRunning = false
 	if puzzle.HasGui {
@@ -59,7 +59,7 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 	}
 
 	if len(remainingPieces) == 0 {
-		addSolution(puzzle.Solutions, puzzle.Grid, puzzle.WinInfo.StatusBar, puzzle.HasGui)
+		addSolution(puzzle.Solutions, puzzle.WorkingGrid, puzzle.WinInfo.StatusBar, puzzle.HasGui)
 		return
 	}
 	minPieceSize := minPieceSize(remainingPieces)
@@ -70,20 +70,21 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 		// considers all possible rotations of this piece
 		for _, rot := range piece.Rotations {
 
-			// tries every cell of the grid
-			for j := 0; j <= len(puzzle.Grid[0])-len(rot[0]); j++ {
-				for i := 0; i <= len(puzzle.Grid)-len(rot); i++ {
+			// tries every cell of the grid (limited to the positions where
+			// the piece is not outside the boundaries of the frame)
+			for j := 0; j <= len(puzzle.WorkingGrid[0])-len(rot[0]); j++ {
+				for i := 0; i <= len(puzzle.WorkingGrid)-len(rot); i++ {
 
 					actualStates ++
 
-					// if the cell is empty anf the piece doesn't overlap with other pieces
-					if puzzle.Grid[i][j] == EMPTY && pieceFits(rot, i, j, puzzle.Grid) {
+					// if the cell is empty and the piece doesn't overlap with other pieces
+					if puzzle.WorkingGrid[i][j] == EMPTY && pieceFits(rot, i, j, puzzle.WorkingGrid) {
 
 						// adds the piece to the grid
-						updatedGrid := addShapeToGrid(rot, i, j, puzzle.Grid, piece.Number)
+						updatedGrid := addShapeToGrid(rot, i, j, puzzle.WorkingGrid, piece.Number)
 
 						// checks for already visited states
-						if isStateAlreadyVisited(updatedGrid) {
+						if checkAndUpdateVisitedState(updatedGrid) {
 							continue
 						}
 
@@ -94,12 +95,12 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 							index, remainingPieces := removePieceFromRemaining(remainingPieces, piece)
 
 							// recursively calls this function
-							puzzle.Grid = updatedGrid
+							puzzle.WorkingGrid = updatedGrid
 							solvePuzzle(puzzle, remainingPieces)
 
 							// after having tried, remove this piece and goes on
 							updatedGrid = removeShapeFromGrid(updatedGrid, piece.Number)
-							puzzle.Grid = updatedGrid
+							puzzle.WorkingGrid = updatedGrid
 							remainingPieces = append(remainingPieces[:index], append([]Piece{piece}, remainingPieces[index:]...)...)
 						}
 					}
@@ -109,7 +110,7 @@ func solvePuzzle(puzzle *Puzzle, remainingPieces []Piece) {
 	}
 }
 
-func isStateAlreadyVisited(grid [][]uint8) bool {
+func checkAndUpdateVisitedState(grid Grid) bool {
 
 	gridString := fmt.Sprintf("%s", grid)
 	_, isPresent := visited[gridString]
@@ -120,7 +121,7 @@ func isStateAlreadyVisited(grid [][]uint8) bool {
 	return isPresent
 }
 
-func addSolution(solutions *[][][]uint8, solution [][]uint8, statusBar gtk.Statusbar, useGui bool) [][][]uint8 {
+func addSolution(solutions *[]Grid, solution Grid, statusBar gtk.Statusbar, useGui bool) []Grid {
 
 	for sol := range *solutions {
 		if areEqualPieces((*solutions)[sol], solution) {
@@ -149,7 +150,7 @@ func removePieceFromRemaining(pieces []Piece, piece Piece) (int, []Piece) {
 	return -1, pieces
 }
 
-func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
+func hasLeftUnfillableAreas(grid Grid, minPieceSize int) bool {
 
 	var gridCopy = copyGrid(grid)
 	var min = 10000
@@ -166,7 +167,7 @@ func hasLeftUnfillableAreas(grid [][]uint8, minPieceSize int) bool {
 	return min < minPieceSize
 }
 
-func getAreaSize(grid *[][]uint8, x, y int) int {
+func getAreaSize(grid *Grid, x, y int) int {
 
 	(*grid)[x][y] = FLOOD_FILL_VALUE
 	size := 1
@@ -186,7 +187,7 @@ func getAreaSize(grid *[][]uint8, x, y int) int {
 	return size
 }
 
-func pieceFits(shape Shape, dx, dy int, grid [][]uint8) bool {
+func pieceFits(shape Shape, dx, dy int, grid Grid) bool {
 
 	for i := 0; i < len(shape); i++ {
 		for j := 0; j < len(shape[0]); j++ {
@@ -198,7 +199,7 @@ func pieceFits(shape Shape, dx, dy int, grid [][]uint8) bool {
 	return true
 }
 
-func addShapeToGrid(shape Shape, dx, dy int, grid [][]uint8, number uint8) [][]uint8 {
+func addShapeToGrid(shape Shape, dx, dy int, grid Grid, number uint8) Grid {
 
 	updatedGrid := copyGrid(grid)
 	for i := 0; i < len(shape); i++ {
@@ -211,7 +212,7 @@ func addShapeToGrid(shape Shape, dx, dy int, grid [][]uint8, number uint8) [][]u
 	return updatedGrid
 }
 
-func removeShapeFromGrid(grid [][]uint8, number uint8) [][]uint8 {
+func removeShapeFromGrid(grid Grid, number uint8) Grid {
 
 	updatedGrid := copyGrid(grid)
 	for i := 0; i < len(grid); i++ {
@@ -241,16 +242,16 @@ func RoundedSince(value time.Time) time.Duration {
 	return time.Duration(time.Since(value)/time.Millisecond) * time.Millisecond
 }
 
-func createEmptyGrid(grid [][]uint8) [][]uint8 {
+func createEmptyGrid(grid Grid) Grid {
 
-	var copiedGrid = make([][]uint8, len(grid))
+	var copiedGrid = make(Grid, len(grid))
 	for i := 0; i < len(grid); i++ {
 		copiedGrid[i] = make([]uint8, len(grid[0]))
 	}
 	return copiedGrid
 }
 
-func copyGrid(grid [][]uint8) [][]uint8 {
+func copyGrid(grid Grid) Grid {
 
 	copiedGrid := createEmptyGrid(grid)
 

@@ -6,7 +6,7 @@ import (
 
 func TestHasLeftUnfillableAreas(t *testing.T) {
 
-	var grid = [][]uint8{
+	var grid = Grid{
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1},
 		{1, 1, 0, 1, 1},
@@ -18,7 +18,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{1, 1, 0, 0, 0},
 		{1, 1, 0, 1, 0},
 		{1, 1, 0, 0, 0},
@@ -30,7 +30,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 0},
 		{1, 1, 1, 1, 0},
@@ -42,7 +42,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1},
@@ -54,7 +54,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0},
@@ -66,7 +66,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0},
 		{1, 1, 1, 1, 1},
@@ -78,7 +78,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 		t.Errorf("Expected no fillable area.")
 	}
 
-	grid = [][]uint8{
+	grid = Grid{
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1},
@@ -94,7 +94,7 @@ func TestHasLeftUnfillableAreas(t *testing.T) {
 
 func TestComputesCorrectSolutions(t *testing.T) {
 
-	var grid = [][]uint8{
+	var grid = Grid{
 		{1, 2, 2, 2},
 		{1, 1, 4, 4},
 		{1, 1, 4, 4},
@@ -102,7 +102,7 @@ func TestComputesCorrectSolutions(t *testing.T) {
 	}
 
 	pieces := GetPiecesFromGrid(grid)
-	var solutions [][][]uint8
+	var solutions []Grid
 
 	var puzzle = Puzzle{
 		pieces,

@@ -56,11 +56,9 @@ func getFilenameFromUser() string {
 	return filename
 }
 
-func drawGrid(puzzle Puzzle, grid [][]uint8, cellSize float64, cr *cairo.Context) {
+func drawGrid(puzzle Puzzle, grid Grid, cellSize float64, cr *cairo.Context) {
 
 	colors := GenerateColors(len(puzzle.Pieces))
-
-	//grid := puzzle.Grid
 
 	// draws all the cells
 	var i, j int
@@ -195,7 +193,7 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 		if puzzle.IsRunning == false {
 			solveButton.SetLabel("Stop Finding")
 			puzzle.IsRunning = true
-			var solutions [][][]uint8
+			var solutions []Grid
 			puzzle.Solutions = &solutions
 			puzzle.Pieces = GetPiecesFromGrid(puzzle.OriginalGrid)
 			puzzle.WinInfo.StatusBar.Push(1, "Solving...")
@@ -235,7 +233,7 @@ func CreateAndStartGui(filename string, puzzle Puzzle) {
 		DrawRectangle(0, 0, windowWidth, windowHeight, cr, "")
 
 		// draws the gtkGrid
-		drawGrid(puzzle, puzzle.Grid, cellSize, cr)
+		drawGrid(puzzle, puzzle.WorkingGrid, cellSize, cr)
 	})
 
 	// creates menu

@@ -20,7 +20,7 @@ func createPuzzle(model string) (Puzzle, error) {
 
 	rows := strings.Split(strings.Trim(strings.ToUpper(model), " \t\n\r"), "\n")
 	var maxLen int8 = 0
-	var grid = make([][]uint8, len(rows), len(rows[0]))
+	var grid = make(Grid, len(rows), len(rows[0]))
 	for index, row := range rows {
 		if len(row) == 0 {
 			continue
@@ -48,7 +48,7 @@ func createPuzzle(model string) (Puzzle, error) {
 	}
 
 	pieces := GetPiecesFromGrid(grid)
-	var solutions [][][]uint8
+	var solutions []Grid
 
 	var puzzle = Puzzle{
 		pieces,

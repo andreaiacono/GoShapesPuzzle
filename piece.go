@@ -73,7 +73,7 @@ func copyShape(shape Shape) Shape {
 	return copiedShape
 }
 
-func GetPiecesFromGrid(grid [][]uint8) []Piece {
+func GetPiecesFromGrid(grid Grid) []Piece {
 	pieces := []Piece{}
 	values := getValuesFromGrid(grid)
 
@@ -85,7 +85,7 @@ func GetPiecesFromGrid(grid [][]uint8) []Piece {
 	return pieces
 }
 
-func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
+func getPiece(grid Grid, pieceNumber uint8) Piece {
 
 	var minX = 1000
 	var minY = 1000
@@ -114,7 +114,7 @@ func getPiece(grid [][] uint8, pieceNumber uint8) Piece {
 		}
 	}
 
-	pieceGrid := make([][]uint8, maxX-minX+1)
+	pieceGrid := make(Shape, maxX-minX+1)
 	for i := range pieceGrid {
 		pieceGrid[i] = make([]uint8, maxY-minY+1)
 	}
@@ -171,7 +171,7 @@ func containsShape(shapes []Shape, newShape Shape) bool {
 	return false
 }
 
-func areEqualPieces(shape1 Shape, shape2 Shape) bool {
+func areEqualPieces(shape1 [][]uint8, shape2 [][]uint8) bool {
 	if len(shape1) != len(shape2) || len(shape1[0]) != len(shape2[0]) {
 		return false
 	}
@@ -187,7 +187,7 @@ func areEqualPieces(shape1 Shape, shape2 Shape) bool {
 	return true
 }
 
-func getValuesFromGrid(grid [][]uint8) []uint8 {
+func getValuesFromGrid(grid Grid) []uint8 {
 
 	var i, j int
 	var values = []uint8{}

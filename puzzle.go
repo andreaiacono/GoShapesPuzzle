@@ -4,14 +4,18 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
+// a grid represents the frame in which to put
+// the pieces
+type Grid [][]uint8
+
 // represents a puzzle
 type Puzzle struct {
 	Pieces       []Piece
-	OriginalGrid [][]uint8
-	Grid		 [][]uint8
+	OriginalGrid Grid
+	WorkingGrid  Grid
 	MaxPieceSide int8
 	MinPieceSize int
-	Solutions    *[][][]uint8
+	Solutions    *[]Grid
 	IsRunning    bool
 	HasGui       bool
 	WinInfo      *WinInfo

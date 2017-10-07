@@ -95,8 +95,8 @@ func ShowSolutions(puzzle Puzzle) {
 		windowHeight := float64(da.GetAllocatedHeight())
 		windowRatio := windowWidth / windowHeight
 
-		puzzleWidth := float64(len(puzzle.Grid[0]))
-		puzzleHeight := float64(len(puzzle.Grid))
+		puzzleWidth := float64(len(puzzle.WorkingGrid[0]))
+		puzzleHeight := float64(len(puzzle.WorkingGrid))
 		puzzleRatio := puzzleWidth / puzzleHeight
 
 		if windowRatio > puzzleRatio {

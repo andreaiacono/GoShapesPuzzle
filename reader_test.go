@@ -24,7 +24,7 @@ func TestCreatePuzzle(t *testing.T) {
 		t.Errorf("The min size of a piece is 3")
 	}
 
-	if len(puzzle.Grid) != 4 || len(puzzle.Grid[0]) != 4 {
+	if len(puzzle.WorkingGrid) != 4 || len(puzzle.WorkingGrid[0]) != 4 {
 		t.Errorf("The size of the grid is 4x4")
 	}
 }
